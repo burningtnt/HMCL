@@ -22,6 +22,7 @@ afterEvaluate {
                     targetPlatform.set(it.targetPlatform.get())
                     toolChain.set(it.toolChain.get())
 
+                    val sharedLibraryType = if (it.targetPlatform.get().operatingSystem.isWindows) "dll" else "so"
                     val hashcode = it.outputs.files.singleFile.listFiles()[0].name
                     val objFile = it.outputs.files.singleFile.resolve("${hashcode}/jni.obj")
                     val dllFile = project.buildDir.resolve(
@@ -29,7 +30,7 @@ afterEvaluate {
                             it.targetPlatform.get().name.substring(
                                 "host:".length
                             )
-                        }.dll"
+                        }.${sharedLibraryType}"
                     )
 
                     source.from(objFile)

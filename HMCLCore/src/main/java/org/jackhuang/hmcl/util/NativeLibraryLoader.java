@@ -27,30 +27,36 @@ public final class NativeLibraryLoader {
         }
 
         try {
-            if (OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS) {
-                JarUtils.thisJar().ifPresent(path -> {
-                    File jni = new File(path.getParent().toFile(), "hmcl.windows.dll");
+            JarUtils.thisJar().ifPresent(path -> {
+                String sharedLibraryType;
+                if (OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS) {
+                    sharedLibraryType = "dll";
+                } else if (OperatingSystem.CURRENT_OS == OperatingSystem.LINUX || OperatingSystem.CURRENT_OS == OperatingSystem.OSX) {
+                    sharedLibraryType = "so";
+                } else {
+                    sharedLibraryType = "unknown";
+                }
+                File jni = new File(path.getParent().toFile(), String.format("hmcl.jni.%s", sharedLibraryType));
 
-                    try (InputStream inputStream = NativeLibraryLoader.class.getClassLoader().getResourceAsStream(String.format("jni-%s.dll", Architecture.CURRENT_ARCH.getDisplayName()))) {
-                        if (inputStream != null) {
-                            try (FileOutputStream fileOutputStream = new FileOutputStream(jni)) {
-                                byte[] buffer = new byte[8192];
-                                int read;
-                                while ((read = inputStream.read(buffer, 0, 8192)) >= 0) {
-                                    fileOutputStream.write(buffer, 0, read);
-                                }
+                try (InputStream inputStream = NativeLibraryLoader.class.getClassLoader().getResourceAsStream(String.format("native/jni-%s.%s", Architecture.CURRENT_ARCH.getDisplayName(), sharedLibraryType))) {
+                    if (inputStream != null) {
+                        try (FileOutputStream fileOutputStream = new FileOutputStream(jni)) {
+                            byte[] buffer = new byte[8192];
+                            int read;
+                            while ((read = inputStream.read(buffer, 0, 8192)) >= 0) {
+                                fileOutputStream.write(buffer, 0, read);
                             }
                         }
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
                     }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
-                    System.load(jni.getAbsolutePath());
+                System.load(jni.getAbsolutePath());
 
-                    LOG.log(Level.INFO, String.format("Load JNI from \"%s\".", jni.getAbsolutePath()));
-                    processIdentityState = true;
-                });
-            }
+                LOG.log(Level.INFO, String.format("Load JNI from \"%s\".", jni.getAbsolutePath()));
+                processIdentityState = true;
+            });
         } catch (Throwable e) {
             LOG.log(Level.WARNING, "Fail to load JNI. HMCL may crash.", e);
         }
