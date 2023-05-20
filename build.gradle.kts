@@ -6,50 +6,52 @@ group = "org.jackhuang"
 version = "3.0"
 
 subprojects {
-    apply {
-        plugin("java")
-        plugin("idea")
-        plugin("maven-publish")
-        plugin("checkstyle")
-    }
-
-    repositories {
-        flatDir {
-            name = "libs"
-            dirs = setOf(rootProject.file("lib"))
+    if (this.name != "HMCLNative") {
+        apply {
+            plugin("java")
+            plugin("idea")
+            plugin("maven-publish")
+            plugin("checkstyle")
         }
-        mavenCentral()
-        maven(url = "https://jitpack.io")
-    }
 
-    tasks.withType<JavaCompile> {
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
-
-        options.encoding = "UTF-8"
-    }
-
-    configure<CheckstyleExtension> {
-        sourceSets = setOf()
-    }
-
-    dependencies {
-        "testImplementation"("org.junit.jupiter:junit-jupiter:5.9.1")
-    }
-
-    tasks.withType<Test> {
-        useJUnitPlatform()
-        testLogging.showStandardStreams = true
-    }
-
-    configure<PublishingExtension> {
-        publications {
-            create<MavenPublication>("maven") {
-                from(components["java"])
-            }
-        }
         repositories {
-            mavenLocal()
+            flatDir {
+                name = "libs"
+                dirs = setOf(rootProject.file("lib"))
+            }
+            mavenCentral()
+            maven(url = "https://jitpack.io")
+        }
+
+        tasks.withType<JavaCompile> {
+            sourceCompatibility = "1.8"
+            targetCompatibility = "1.8"
+
+            options.encoding = "UTF-8"
+        }
+
+        configure<CheckstyleExtension> {
+            sourceSets = setOf()
+        }
+
+        dependencies {
+            "testImplementation"("org.junit.jupiter:junit-jupiter:5.9.1")
+        }
+
+        tasks.withType<Test> {
+            useJUnitPlatform()
+            testLogging.showStandardStreams = true
+        }
+
+        configure<PublishingExtension> {
+            publications {
+                create<MavenPublication>("maven") {
+                    from(components["java"])
+                }
+            }
+            repositories {
+                mavenLocal()
+            }
         }
     }
 }

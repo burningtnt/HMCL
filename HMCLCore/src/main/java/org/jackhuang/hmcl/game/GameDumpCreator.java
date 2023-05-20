@@ -2,6 +2,7 @@ package org.jackhuang.hmcl.game;
 
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
+import org.jackhuang.hmcl.util.NativeLibraryLoader;
 import org.jackhuang.hmcl.util.platform.CurrentJava;
 import org.jackhuang.hmcl.util.platform.JavaVersion;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
@@ -97,15 +98,12 @@ public final class GameDumpCreator {
             // All the Operating System is accepted.
             return true;
         }
+
         if (OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS) {
-            // On Windows, there is no ways to get the pid before Java 9 (We can only get the handle field of a Process).
-            return false;
-        } else if (OperatingSystem.CURRENT_OS == OperatingSystem.OSX || OperatingSystem.CURRENT_OS == OperatingSystem.LINUX) {
-            // On Linux or Mac, we can get field UnixProcess.pid field to get the pid even before Java 9.
-            return true;
+            return NativeLibraryLoader.isProcessIdentityState();
+        } else {
+            return OperatingSystem.CURRENT_OS == OperatingSystem.OSX || OperatingSystem.CURRENT_OS == OperatingSystem.LINUX;
         }
-        // Unknown Operating System, no fallback available.
-        return false;
     }
 
     public static void writeDumpTo(long pid, File file) {
@@ -170,7 +168,7 @@ public final class GameDumpCreator {
     private static void writeDataDumpTo(long pid, OutputStream outputStream) {
         try {
             VirtualMachine vm = VirtualMachine.attach(String.valueOf(pid));
-            safeReadVMInputstream(executeJCmd(vm, "threaddump"), (char[] data) -> {
+            safeReadVMInputstream(executeJCmd(vm, "Thread.print"), (char[] data) -> {
                 try {
                     outputStream.write(new String(data).getBytes(StandardCharsets.UTF_8));
                 } catch (IOException e) {

@@ -19,6 +19,7 @@ minecraft-exported-crash-info*
 /HMCL/build/
 /HMCLCore/build/
 /HMCLTransformerDiscoveryService/build/
+/HMCLNative/build
 /minecraft/libraries/HMCLTransformerDiscoveryService/build/
 
 # idea

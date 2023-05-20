@@ -33,6 +33,7 @@ import org.jackhuang.hmcl.upgrade.UpdateChecker;
 import org.jackhuang.hmcl.upgrade.UpdateHandler;
 import org.jackhuang.hmcl.util.CrashReporter;
 import org.jackhuang.hmcl.util.Lang;
+import org.jackhuang.hmcl.util.NativeLibraryLoader;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.io.JarUtils;
 import org.jackhuang.hmcl.util.platform.Architecture;
@@ -64,6 +65,8 @@ public final class Launcher extends Application {
         Thread.currentThread().setUncaughtExceptionHandler(CRASH_REPORTER);
 
         CookieHandler.setDefault(COOKIE_MANAGER);
+
+        NativeLibraryLoader.loadJNI();
 
         LOG.info("JavaFX Version: " + System.getProperty("javafx.runtime.version"));
         try {

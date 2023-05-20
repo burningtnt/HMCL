@@ -19,6 +19,7 @@ package org.jackhuang.hmcl.util.platform;
 
 import org.jackhuang.hmcl.launch.StreamPump;
 import org.jackhuang.hmcl.util.Lang;
+import org.jackhuang.hmcl.util.NativeLibraryLoader;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -86,8 +87,8 @@ public class ManagedProcess {
     /**
      * The PID of the raw system process
      *
-     * @throws UnsupportedOperationException if current Java environment is not supported.
      * @return PID
+     * @throws UnsupportedOperationException if current Java environment is not supported.
      */
     public long getPID() throws UnsupportedOperationException {
         if (JavaVersion.CURRENT_JAVA.getParsedVersion() >= 9) {
@@ -104,8 +105,18 @@ public class ManagedProcess {
             if (OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS) {
                 // On Windows, we can invoke method Process.pid() to get the pid.
                 // However, this method is supplied since Java 9.
-                // So, there is no ways to get the pid.
-                throw new UnsupportedOperationException("Cannot get the pid of a Process on Java 8 on Windows.");
+                // So, we have to use JNI to get the pid.
+                if (NativeLibraryLoader.isProcessIdentityState()) {
+                    try {
+                        Field pidField = process.getClass().getDeclaredField("handle");
+                        pidField.setAccessible(true);
+                        return getPIDOnWindows(pidField.getLong(process));
+                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    throw new UnsupportedOperationException(String.format("Cannot get the pid of a Process on Java 8 on Windows because JNI ProcessIdentityState is not supported on current Architecture %s.", Architecture.CURRENT_ARCH.getDisplayName()));
+                }
             } else if (OperatingSystem.CURRENT_OS == OperatingSystem.OSX || OperatingSystem.CURRENT_OS == OperatingSystem.LINUX) {
                 // On Linux or Mac, we can get field UnixProcess.pid field to get the pid.
                 // All the Java version is accepted.
@@ -123,6 +134,8 @@ public class ManagedProcess {
             }
         }
     }
+
+    private static native long getPIDOnWindows(long handle);
 
     /**
      * The command line.

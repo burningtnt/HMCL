@@ -2,6 +2,16 @@ plugins {
     `java-library`
 }
 
+tasks.processResources {
+    dependsOn(project(":HMCLNative").tasks.getByName("compileJNI"))
+
+    into("native") {
+        (project(":HMCLNative").ext.get("hmcl.native.paths") as MutableList<File>).forEach { file: File ->
+            from(file.absolutePath)
+        }
+    }
+}
+
 dependencies {
     api("org.glavo:simple-png-javafx:0.3.0")
     api("com.google.code.gson:gson:2.10.1")
@@ -14,3 +24,5 @@ dependencies {
     api("org.apache.commons:commons-compress:1.23.0")
     compileOnlyApi("org.jetbrains:annotations:24.0.1")
 }
+
+ext.set("hmcl.java.home", org.gradle.internal.jvm.Jvm.current().javaHome.absolutePath)
