@@ -5,9 +5,18 @@ plugins {
 tasks.processResources {
     dependsOn(project(":HMCLNative").tasks.getByName("compileJNI"))
 
-    into("native") {
+    doLast {
+        val nativeRoot = this@processResources.destinationDir.resolve("native")
+        if (!nativeRoot.exists()) {
+            nativeRoot.mkdir()
+        }
+
         (project(":HMCLNative").ext.get("hmcl.native.paths") as MutableList<File>).forEach { file: File ->
-            from(file.absolutePath)
+            if (!file.exists()) {
+                throw RuntimeException("JNI File \"${file.absolutePath}\" doesn't exist.")
+            }
+
+            file.copyTo(nativeRoot.resolve(file.name))
         }
     }
 }

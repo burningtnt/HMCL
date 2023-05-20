@@ -4,13 +4,40 @@ plugins {
     `cpp-application`
 }
 
+val compileTargets = listOf(machines.windows.x86, machines.windows.x86_64)
+
 afterEvaluate {
+    val compileTargetMachines = mutableMapOf<String, TargetMachine>()
+    val compileTargetMachinesStatus = mutableMapOf<String, Boolean>()
+    val jniResults = mutableMapOf<String, File>()
+    val jniFilesRoot = projectDir.resolve("outputs")
+    if (!jniFilesRoot.exists()) {
+        jniFilesRoot.mkdir()
+    }
+    for (machine in compileTargets) {
+        compileTargetMachines[machine.architecture.name] = machine
+        compileTargetMachinesStatus[machine.architecture.name] = false
+
+        jniResults[machine.architecture.name] =
+            jniFilesRoot.resolve("jni-${machine.architecture.name}.${if (machine.operatingSystemFamily.isWindows) "dll" else "so"}")
+
+        compileTargetMachinesStatus[machine.architecture.name] = jniResults[machine.architecture.name]!!.exists()
+
+    }
+
     tasks.create("compileJNI") {
         dependsOn(project(":HMCLCore").tasks.getByName("compileJava"))
-
-        val jniResults = mutableListOf<File>()
         tasks.withType(CppCompile::class.java).stream()
             .filter { cppCompile: CppCompile -> cppCompile.name.lowercase(Locale.ROOT).contains("release") }.forEach {
+                if (it.targetPlatform == null) {
+                    return@forEach
+                }
+
+                if (compileTargetMachinesStatus[it.targetPlatform.get().architecture.name]!!) {
+                    return@forEach
+                }
+                compileTargetMachinesStatus[it.targetPlatform.get().architecture.name] = true
+
                 it.dependsOn(project(":HMCLCore").tasks.getByName("compileJava"))
                 it.includes(File(project(":HMCLCore").ext.get("hmcl.java.home") as String, "include").absolutePath)
 
@@ -36,10 +63,27 @@ afterEvaluate {
                     source.from(objFile)
                     destinationDirectory.set(dllFile.parentFile)
                     linkedFile.set(dllFile)
-                    jniResults.add(dllFile)
+
+                    outputs.files.files.add(dllFile)
+                    doLast {
+                        dllFile.copyTo(jniResults[it.targetPlatform.get().architecture.name]!!, true, 2048)
+                    }
                 })
             }
-        project.ext.set("hmcl.native.paths", jniResults)
+
+        val sb = StringBuilder()
+        for (entry in compileTargetMachinesStatus) {
+            if (!entry.value) {
+                sb.append(entry.key)
+                sb.append(", ")
+            }
+        }
+
+        if (sb.isNotEmpty()) {
+            throw RuntimeException("Native machine compile results ${sb.substring(0, sb.length - ", ".length)} not found")
+        }
+
+        project.ext.set("hmcl.native.paths", jniResults.values.toMutableList())
     }
 
     listOf("build", "assemble", "check").forEach { taskName: String ->
@@ -51,5 +95,5 @@ afterEvaluate {
 }
 
 application {
-    targetMachines.set(listOf(machines.windows.x86, machines.windows.x86_64))
+    targetMachines.set(compileTargets)
 }
