@@ -28,14 +28,7 @@ afterEvaluate {
     tasks.create("compileJNI") {
         dependsOn(project(":HMCLCore").tasks.getByName("compileJava"))
         tasks.withType(CppCompile::class.java).stream()
-            .filter { cppCompile: CppCompile -> cppCompile.name.lowercase(Locale.ROOT).contains("release") }.forEach {
-                if (it.targetPlatform == null) {
-                    return@forEach
-                }
-
-                if (compileTargetMachinesStatus[it.targetPlatform.get().architecture.name]!!) {
-                    return@forEach
-                }
+            .filter { cppCompile: CppCompile -> cppCompile.name.lowercase(Locale.ROOT).contains("release") && cppCompile.targetPlatform != null }.forEach {
                 compileTargetMachinesStatus[it.targetPlatform.get().architecture.name] = true
 
                 it.dependsOn(project(":HMCLCore").tasks.getByName("compileJava"))
