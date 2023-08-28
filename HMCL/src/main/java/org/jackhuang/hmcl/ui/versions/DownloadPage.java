@@ -31,6 +31,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
+import org.jackhuang.hmcl.download.LibraryAnalyzer;
 import org.jackhuang.hmcl.game.Version;
 import org.jackhuang.hmcl.mod.ModLoaderType;
 import org.jackhuang.hmcl.mod.ModManager;
@@ -77,7 +78,7 @@ public class DownloadPage extends Control implements DecoratorPage {
     private final DownloadCallback callback;
     private final DownloadListPage page;
 
-    private SimpleMultimap<String, RemoteMod.Version> versions;
+    private SimpleMultimap<String, RemoteMod.Version, List<RemoteMod.Version>> versions;
 
     public DownloadPage(DownloadListPage page, RemoteMod addon, Profile.ProfileVersion version, @Nullable DownloadCallback callback) {
         this.page = page;
@@ -123,9 +124,9 @@ public class DownloadPage extends Control implements DecoratorPage {
         }).start();
     }
 
-    private SimpleMultimap<String, RemoteMod.Version> sortVersions(Stream<RemoteMod.Version> versions) {
-        SimpleMultimap<String, RemoteMod.Version> classifiedVersions
-                = new SimpleMultimap<String, RemoteMod.Version>(HashMap::new, ArrayList::new);
+    private SimpleMultimap<String, RemoteMod.Version, List<RemoteMod.Version>> sortVersions(Stream<RemoteMod.Version> versions) {
+        SimpleMultimap<String, RemoteMod.Version, List<RemoteMod.Version>> classifiedVersions
+                = new SimpleMultimap<>(HashMap::new, ArrayList::new);
         versions.forEach(version -> {
             for (String gameVersion : version.getGameVersions()) {
                 classifiedVersions.put(gameVersion, version);
@@ -133,7 +134,7 @@ public class DownloadPage extends Control implements DecoratorPage {
         });
 
         for (String gameVersion : classifiedVersions.keys()) {
-            List<RemoteMod.Version> versionList = (List<RemoteMod.Version>) classifiedVersions.get(gameVersion);
+            List<RemoteMod.Version> versionList = classifiedVersions.get(gameVersion);
             versionList.sort(Comparator.comparing(RemoteMod.Version::getDatePublished).reversed());
         }
         return classifiedVersions;
@@ -290,36 +291,21 @@ public class DownloadPage extends Control implements DecoratorPage {
                 FXUtils.onChangeAndOperate(control.loaded, loaded -> {
                     if (control.versions == null) return;
 
-                    if (control.version != null && control.version.getProfile() != null && control.version.getVersion() != null) {
-                        String currentGameVersion = null;
-                        for (Version patches : control.version.getProfile().getRepository().getVersion(control.version.getVersion()).getPatches()) {
-                            if (patches.getId().equals("game")) {
-                                currentGameVersion = patches.getVersion();
-                                break;
+                    if (control.version.getProfile() != null && control.version.getVersion() != null) {
+                        Version game = control.version.getProfile().getRepository().getResolvedPreservingPatchesVersion(control.version.getVersion());
+                        LibraryAnalyzer libraryAnalyzer = LibraryAnalyzer.analyze(game);
+                        libraryAnalyzer.getVersion(LibraryAnalyzer.LibraryType.MINECRAFT).ifPresent(currentGameVersion -> {
+                            Set<ModLoaderType> currentGameModLoaders = libraryAnalyzer.getModLoaders();
+                            if (control.versions.containsKey(currentGameVersion)) {
+                                control.versions.get(currentGameVersion).stream()
+                                        .filter(version1 -> version1.getLoaders().isEmpty() || version1.getLoaders().stream().anyMatch(currentGameModLoaders::contains))
+                                        .findFirst()
+                                        .ifPresent(value -> list.getContent().addAll(
+                                                ComponentList.createComponentListTitle(i18n("mods.download.recommend", currentGameVersion)),
+                                                new ModItem(value, control)
+                                        ));
                             }
-                        }
-
-                        if (currentGameVersion != null && control.versions.containsKey(currentGameVersion) && control.versions.get(currentGameVersion).stream().findFirst().isPresent()) {
-                            list.getContent().addAll(
-                                    ComponentList.createComponentListTitle(i18n("mods.download.recommend", currentGameVersion)),
-                                    new ModItem(control.versions.get(currentGameVersion).stream().findFirst().get(), control)
-                            );
-
-                            for (String gameVersion : control.versions.keys().stream()
-                                    .sorted(VersionNumber.VERSION_COMPARATOR.reversed())
-                                    .collect(Collectors.toList())) {
-                                ComponentList sublist = new ComponentList(() ->
-                                        control.versions.get(gameVersion).stream()
-                                                .map(version -> new ModItem(version, control))
-                                                .collect(Collectors.toList()));
-                                sublist.getStyleClass().add("no-padding");
-                                sublist.setTitle(gameVersion);
-
-                                list.getContent().add(sublist);
-                            }
-
-                            return;
-                        }
+                        });
                     }
 
                     for (String gameVersion : control.versions.keys().stream()
