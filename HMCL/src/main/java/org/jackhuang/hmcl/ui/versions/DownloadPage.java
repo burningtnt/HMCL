@@ -391,7 +391,7 @@ public class DownloadPage extends Control implements DecoratorPage {
 
                 {
                     StackPane graphicPane = new StackPane();
-                    graphicPane.getChildren().setAll(SVG.releaseCircleOutline(Theme.blackFillBinding(), 24, 24));
+                    graphicPane.getChildren().setAll(SVG.RELEASE_CIRCLE_OUTLINE.createIcon(Theme.blackFill(), 24, 24));
 
                     TwoLineListItem content = new TwoLineListItem();
                     HBox.setHgrow(content, Priority.ALWAYS);
