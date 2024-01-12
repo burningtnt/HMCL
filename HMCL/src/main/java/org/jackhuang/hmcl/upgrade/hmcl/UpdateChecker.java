@@ -46,7 +46,7 @@ public final class UpdateChecker {
                 } else {
                     // We can update from development version to stable version,
                     // which can be downgrading.
-                    return asVersion(latest.getVersion()).compareTo(asVersion(Metadata.VERSION)) != 0;
+                    return asVersion(latest.getVersion()).compareTo(asVersion(net.burningtnt.hmclprs.Hooks.onCheckIsUpdateTarget(Metadata.VERSION))) != 0;
                 }
             },
             latestVersion);

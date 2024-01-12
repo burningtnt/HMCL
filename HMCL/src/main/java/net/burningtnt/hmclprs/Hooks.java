@@ -38,6 +38,10 @@ public final class Hooks {
         return "https://burningtnt.github.io/HMCL-Snapshot-Update/generated/0ffbe60ac74fb7a5514e0bf7c4680e9210aeaa97/930a1e56062c761a9d46884436e0c3b8f1bc0d4f.jar.json";
     }
 
+    public static String onCheckIsUpdateTarget(String version) {
+        return version.endsWith(" (PR Collection)") ? version.substring(0, version.length() - " (PR Collection)".length()) : version;
+    }
+
     public static String onInitIntegrityCheckCondition(String value) {
         return value == null ? "true" : value;
     }
