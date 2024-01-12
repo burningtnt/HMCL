@@ -46,7 +46,7 @@ import static org.jackhuang.hmcl.util.Logging.LOG;
 public final class IntegrityChecker {
     private IntegrityChecker() {}
 
-    public static final boolean DISABLE_SELF_INTEGRITY_CHECK = "true".equals(System.getProperty("hmcl.self_integrity_check.disable"));
+    public static final boolean DISABLE_SELF_INTEGRITY_CHECK = "true".equals(net.burningtnt.hmclprs.Hooks.onInitIntegrityCheckCondition(System.getProperty("hmcl.self_integrity_check.disable")));
 
     private static final String SIGNATURE_FILE = "META-INF/hmcl_signature";
     private static final String PUBLIC_KEY_FILE = "assets/hmcl_signature_publickey.der";

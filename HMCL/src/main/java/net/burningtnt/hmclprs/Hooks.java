@@ -1,5 +1,7 @@
 package net.burningtnt.hmclprs;
 
+import org.jackhuang.hmcl.Metadata;
+
 import javax.swing.*;
 
 import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
@@ -30,5 +32,17 @@ public final class Hooks {
 
     public static String onInitApplicationVersion(String version) {
         return version + " (PR Collection)";
+    }
+
+    public static String onInitApplicationUpdateLink(String url) {
+        return "https://burningtnt.github.io/HMCL-Snapshot-Update/generated/0ffbe60ac74fb7a5514e0bf7c4680e9210aeaa97/930a1e56062c761a9d46884436e0c3b8f1bc0d4f.jar.json";
+    }
+
+    public static String onInitIntegrityCheckCondition(String value) {
+        return value == null ? "true" : value;
+    }
+
+    public static boolean onCheckIsDevelopmentVersionCondition(boolean value) {
+        return Metadata.VERSION.contains("@");
     }
 }
