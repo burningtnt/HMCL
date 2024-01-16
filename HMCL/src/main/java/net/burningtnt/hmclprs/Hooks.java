@@ -43,8 +43,4 @@ public final class Hooks {
     public static String onInitDisableSelfIntegrityCheckProperty(String value) {
         return value == null ? "true" : value;
     }
-
-    public static boolean onGetIsDevelopmentVersionCondition(String value) {
-        return value.contains("@");
-    }
 }

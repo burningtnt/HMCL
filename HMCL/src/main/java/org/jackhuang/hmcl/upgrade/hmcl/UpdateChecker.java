@@ -41,7 +41,7 @@ public final class UpdateChecker {
     private static BooleanBinding outdated = Bindings.createBooleanBinding(
             () -> {
                 RemoteVersion latest = latestVersion.get();
-                if (latest == null || net.burningtnt.hmclprs.Hooks.onGetIsDevelopmentVersionCondition(Metadata.VERSION)) {
+                if (latest == null || isDevelopmentVersion(Metadata.VERSION)) {
                     return false;
                 } else {
                     // We can update from development version to stable version,
