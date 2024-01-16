@@ -38,7 +38,7 @@ public final class Metadata {
     public static final String FULL_TITLE = FULL_NAME + " v" + VERSION;
 
     // hmcl.update_source.override is deprecated. If it is used, a warning message will be printed in org.jackhuang.hmcl.Launcher.main .
-    public static final String HMCL_UPDATE_URL = System.getProperty("hmcl.hmcl_update_source.override", System.getProperty("hmcl.update_source.override", net.burningtnt.hmclprs.Hooks.onInitApplicationUpdateLink("https://hmcl.huangyuhui.net/api/update_link")));
+    public static final String HMCL_UPDATE_URL = System.getProperty("hmcl.hmcl_update_source.override", System.getProperty("hmcl.update_source.override", net.burningtnt.hmclprs.Hooks.onInitApplicationDefaultUpdateLink("https://hmcl.huangyuhui.net/api/update_link")));
     public static final String RESOURCE_UPDATE_URL = System.getProperty("hmcl.resource_update_source.override", "https://hmcl.huangyuhui.net/api/dynamic_remote_resource/update_link");
     public static final String CONTACT_URL = "https://docs.hmcl.net/help";
     public static final String HELP_URL = "https://docs.hmcl.net";
