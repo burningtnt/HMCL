@@ -57,6 +57,14 @@ Simply execute the following command in project root directory:
 
 Make sure you have Java installed with JavaFX 8 at least. Liberica Full JDK 8 or later is recommended.
 
+### Dynamic Remote Resource
+
+HMCL automatically updates some dynamically changing resources, such as the Chinese translation of mods and modpacks, which is independent of the general versioning system of HMCL.
+
+A copy of the resources will still be packed inside the HMCL for the users who have unstable network connection, or who have to use HMCL without network.
+
+For more information about this feature, see [this file](data-json/README.md).
+
 ## JVM Options (for debugging)
 
 | Parameter                                      | Description                                                                                                                       |
