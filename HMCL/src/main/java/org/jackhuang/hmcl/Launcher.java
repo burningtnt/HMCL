@@ -44,6 +44,7 @@ import org.jackhuang.hmcl.util.io.JarUtils;
 import org.jackhuang.hmcl.util.platform.Architecture;
 import org.jackhuang.hmcl.util.platform.CommandBuilder;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
+import net.burningtnt.webp.jfx.WEBPImageLoaderFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,6 +73,8 @@ public final class Launcher extends Application {
         Thread.currentThread().setUncaughtExceptionHandler(CRASH_REPORTER);
 
         CookieHandler.setDefault(COOKIE_MANAGER);
+
+        WEBPImageLoaderFactory.setupListener();
 
         register();
 
@@ -138,23 +141,23 @@ public final class Launcher extends Application {
         Skin.registerDefaultSkinLoader((type) -> {
             switch (type) {
                 case ALEX:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/alex.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/alex.webp");
                 case ARI:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/ari.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/ari.webp");
                 case EFE:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/efe.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/efe.webp");
                 case KAI:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/kai.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/kai.webp");
                 case MAKENA:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/makena.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/makena.webp");
                 case NOOR:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/noor.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/noor.webp");
                 case STEVE:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/steve.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/steve.webp");
                 case SUNNY:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/sunny.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/sunny.webp");
                 case ZURI:
-                    return Skin.class.getResourceAsStream("/assets/img/skin/zuri.png");
+                    return Skin.class.getResourceAsStream("/assets/img/skin/zuri.webp");
                 default:
                     return null;
             }
