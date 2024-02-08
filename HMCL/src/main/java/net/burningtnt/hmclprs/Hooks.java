@@ -37,7 +37,7 @@ public final class Hooks {
     }
 
     public static String onInitApplicationDefaultUpdateLink(String url) {
-        return "https://burningtnt.github.io/HMCL-Snapshot-Update/generated/0ffbe60ac74fb7a5514e0bf7c4680e9210aeaa97/930a1e56062c761a9d46884436e0c3b8f1bc0d4f.jar.json";
+        return "https://burningtnt.github.io/HMCL-Snapshot-Update/artifacts/v4/0ffbe60ac74fb7a5514e0bf7c4680e9210aeaa97/3d30dac9b910d493a261c2d0e6e14ab33c8ec9b9.jar.json";
     }
 
     public static String onInitDisableSelfIntegrityCheckProperty(String value) {
