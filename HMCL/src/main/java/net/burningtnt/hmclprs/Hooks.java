@@ -37,7 +37,7 @@ public final class Hooks {
     }
 
     public static String onInitApplicationDefaultUpdateLink(String url) {
-        return "https://burningtnt.github.io/HMCL-Snapshot-Update/artifacts/v5/uploaders/local-storage.gh-pages/burningtnt/HMCL/prs/gradle.yml.jar.json";
+        return "https://hmcl-snapshot-update-73w.pages.dev/redirect/v1/type/pr-collection";
     }
 
     public static String onInitDisableSelfIntegrityCheckProperty(String value) {
