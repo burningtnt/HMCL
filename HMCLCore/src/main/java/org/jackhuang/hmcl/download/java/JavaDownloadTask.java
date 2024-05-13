@@ -21,14 +21,12 @@ import org.jackhuang.hmcl.download.ArtifactMalformedException;
 import org.jackhuang.hmcl.download.DownloadProvider;
 import org.jackhuang.hmcl.game.DownloadInfo;
 import org.jackhuang.hmcl.game.GameJavaVersion;
+import org.jackhuang.hmcl.java.*;
 import org.jackhuang.hmcl.task.FileDownloadTask;
 import org.jackhuang.hmcl.task.GetTask;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.util.gson.JsonUtils;
 import org.jackhuang.hmcl.util.io.ChecksumMismatchException;
-import org.jackhuang.hmcl.util.io.FileUtils;
-import org.jackhuang.hmcl.util.platform.OperatingSystem;
-import org.jackhuang.hmcl.util.versioning.VersionNumber;
 import org.tukaani.xz.LZMAInputStream;
 
 import java.io.File;
@@ -40,50 +38,39 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.jackhuang.hmcl.util.logging.Logger.LOG;
 
-public class JavaDownloadTask extends Task<Void> {
-    private final GameJavaVersion javaVersion;
-    private final Path rootDir;
-    private String platform;
-    private final Task<RemoteFiles> javaDownloadsTask;
-    private JavaDownloads.JavaDownload download;
-    private final List<Task<?>> dependencies = new ArrayList<>();
-    private final DownloadProvider downloadProvider;
+public final class JavaDownloadTask extends Task<JavaDownloadTask.Result> {
 
-    public JavaDownloadTask(GameJavaVersion javaVersion, Path rootDir, DownloadProvider downloadProvider) {
-        this.javaVersion = javaVersion;
-        this.rootDir = rootDir;
+    private final DownloadProvider downloadProvider;
+    private final Path target;
+    private final Task<RemoteFiles> javaDownloadsTask;
+    private final List<Task<?>> dependencies = new ArrayList<>();
+
+    private volatile JavaDownloads.JavaDownload download;
+
+    public JavaDownloadTask(DownloadProvider downloadProvider, Path target, GameJavaVersion javaVersion, String platform) {
+        this.target = target;
         this.downloadProvider = downloadProvider;
         this.javaDownloadsTask = new GetTask(downloadProvider.injectURLWithCandidates(
                 "https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"))
         .thenComposeAsync(javaDownloadsJson -> {
             JavaDownloads allDownloads = JsonUtils.fromNonNullJson(javaDownloadsJson, JavaDownloads.class);
-            if (!allDownloads.getDownloads().containsKey(platform)) throw new UnsupportedPlatformException();
+
             Map<String, List<JavaDownloads.JavaDownload>> osDownloads = allDownloads.getDownloads().get(platform);
-            if (!osDownloads.containsKey(javaVersion.getComponent())) throw new UnsupportedPlatformException();
+            if (osDownloads == null || !osDownloads.containsKey(javaVersion.getComponent()))
+                throw new UnsupportedPlatformException("Unsupported platform: " + platform);
             List<JavaDownloads.JavaDownload> candidates = osDownloads.get(javaVersion.getComponent());
             for (JavaDownloads.JavaDownload download : candidates) {
-                if (VersionNumber.compare(download.getVersion().getName(), Integer.toString(javaVersion.getMajorVersion())) >= 0) {
+                if (JavaInfo.parseVersion(download.getVersion().getName()) >= javaVersion.getMajorVersion()) {
                     this.download = download;
                     return new GetTask(downloadProvider.injectURLWithCandidates(download.getManifest().getUrl()));
                 }
             }
-            throw new UnsupportedPlatformException();
+            throw new UnsupportedPlatformException("Candidates: " + JsonUtils.GSON.toJson(candidates));
         })
         .thenApplyAsync(javaDownloadJson -> JsonUtils.fromNonNullJson(javaDownloadJson, RemoteFiles.class));
-    }
-
-    @Override
-    public boolean doPreExecute() {
-        return true;
-    }
-
-    @Override
-    public void preExecute() throws Exception {
-        this.platform = JavaRepository.getSystemJavaPlatform().orElseThrow(UnsupportedPlatformException::new);
     }
 
     @Override
@@ -93,9 +80,8 @@ public class JavaDownloadTask extends Task<Void> {
 
     @Override
     public void execute() throws Exception {
-        Path jvmDir = rootDir.resolve(javaVersion.getComponent()).resolve(platform).resolve(javaVersion.getComponent());
         for (Map.Entry<String, RemoteFiles.Remote> entry : javaDownloadsTask.getResult().getFiles().entrySet()) {
-            Path dest = jvmDir.resolve(entry.getKey());
+            Path dest = target.resolve(entry.getKey());
             if (entry.getValue() instanceof RemoteFiles.RemoteFile) {
                 RemoteFiles.RemoteFile file = ((RemoteFiles.RemoteFile) entry.getValue());
 
@@ -115,11 +101,11 @@ public class JavaDownloadTask extends Task<Void> {
 
                 if (file.getDownloads().containsKey("lzma")) {
                     DownloadInfo download = file.getDownloads().get("lzma");
-                    File tempFile = jvmDir.resolve(entry.getKey() + ".lzma").toFile();
+                    File tempFile = target.resolve(entry.getKey() + ".lzma").toFile();
                     FileDownloadTask task = new FileDownloadTask(downloadProvider.injectURLWithCandidates(download.getUrl()), tempFile, new FileDownloadTask.IntegrityCheck("SHA-1", download.getSha1()));
                     task.setName(entry.getKey());
                     dependencies.add(task.thenRunAsync(() -> {
-                        Path decompressed = jvmDir.resolve(entry.getKey() + ".tmp");
+                        Path decompressed = target.resolve(entry.getKey() + ".tmp");
                         try (LZMAInputStream input = new LZMAInputStream(new FileInputStream(tempFile))) {
                             Files.copy(input, decompressed, StandardCopyOption.REPLACE_EXISTING);
                         } catch (IOException e) {
@@ -166,16 +152,22 @@ public class JavaDownloadTask extends Task<Void> {
 
     @Override
     public void postExecute() throws Exception {
-        FileUtils.writeText(rootDir.resolve(javaVersion.getComponent()).resolve(platform).resolve(".version").toFile(), download.getVersion().getName());
-        FileUtils.writeText(rootDir.resolve(javaVersion.getComponent()).resolve(platform).resolve(javaVersion.getComponent() + ".sha1").toFile(),
-                javaDownloadsTask.getResult().getFiles().entrySet().stream()
-                        .filter(entry -> entry.getValue() instanceof RemoteFiles.RemoteFile)
-                        .map(entry -> {
-                            RemoteFiles.RemoteFile file = (RemoteFiles.RemoteFile) entry.getValue();
-                            return entry.getKey() + " /#// " + file.getDownloads().get("raw").getSha1() + " " + file.getDownloads().get("raw").getSize();
-                        })
-                        .collect(Collectors.joining(OperatingSystem.LINE_SEPARATOR)));
+        setResult(new Result(download, javaDownloadsTask.getResult()));
     }
 
-    public static class UnsupportedPlatformException extends Exception {}
+    public static final class Result {
+        public final JavaDownloads.JavaDownload download;
+        public final RemoteFiles remoteFiles;
+
+        public Result(JavaDownloads.JavaDownload download, RemoteFiles remoteFiles) {
+            this.download = download;
+            this.remoteFiles = remoteFiles;
+        }
+    }
+
+    public static final class UnsupportedPlatformException extends Exception {
+        public UnsupportedPlatformException(String message) {
+            super(message);
+        }
+    }
 }
