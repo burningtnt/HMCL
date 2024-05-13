@@ -324,8 +324,12 @@ public final class JavaManager {
                 break;
             case OSX:
                 tryAddJavaHome(javaRuntimes, Paths.get("/Library/Java/JavaVirtualMachines/Contents/Home"));
+                tryAddJavaHome(javaRuntimes, Paths.get(System.getProperty("user.home"), "/Library/Java/JavaVirtualMachines/Contents/Home"));
                 tryAddJavaExecutable(javaRuntimes, Paths.get("/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/bin/java"));
                 tryAddJavaExecutable(javaRuntimes, Paths.get("/Applications/Xcode.app/Contents/Applications/Application Loader.app/Contents/MacOS/itms/java/bin/java"));
+                // Homebrew
+                tryAddJavaExecutable(javaRuntimes, Paths.get("/opt/homebrew/opt/java/bin/java"));
+                searchAllJavaInDirectory(javaRuntimes, Paths.get("/opt/homebrew/Cellar/openjdk"));
                 break;
 
             default:
