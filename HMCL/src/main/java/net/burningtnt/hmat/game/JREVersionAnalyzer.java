@@ -30,7 +30,7 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                     Pattern.compile("Caused by: java.lang.NoSuchMethodError: 'java.lang.Class sun.misc.Unsafe.defineAnonymousClass\\(java.lang.Class, byte\\[], java\\.lang\\.Object\\[]\\)'"),
                     matcher -> 11
             ), pair(
-                    Pattern.compile("java.lang.UnsupportedClassVersionError: .* has been compiled by a more recent version of the Java Runtime \\(class file version (?<target>[0-9]*)\\), this version of the Java Runtime only recognizes class file versions up to (?<current>[0-9]*)"),
+                    Pattern.compile("java.lang.UnsupportedClassVersionError: .* has been compiled by a more recent version of the Java Runtime \\(class file version (?<target>[0-9]*)(\\.[0-9]*)?\\), this version of the Java Runtime only recognizes class file versions up to (?<current>[0-9]*)(\\.[0-9]*)?"),
                     matcher -> {
                         int classVersionMagic = Integer.parseInt(matcher.group("target"));
                         if (classVersionMagic < 52) {
@@ -39,7 +39,7 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                         return classVersionMagic - 44;
                     }
             ), pair(
-                    Pattern.compile("java.lang.IllegalArgumentException: Unsupported class file major version (?<target>[0-9]*)"),
+                    Pattern.compile("java.lang.IllegalArgumentException: Unsupported class file major version (?<target>[0-9]*)(\\.[0-9]*)?"),
                     matcher -> {
                         int classVersionMagic = Integer.parseInt(matcher.group("target"));
                         if (classVersionMagic < 52) {
@@ -72,7 +72,7 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                                 for (JavaRuntime jre : JavaManager.getAllJava()) {
                                     if (jre.getParsedVersion() == nv) {
                                         // TODO: Support non-major java version.
-                                        return Task.completed(jre);
+                                        return Task.supplyAsync(() -> jre);
                                     }
                                 }
                                 // TODO: GameJavaVersion.get(javaMajor) may be null.
@@ -82,7 +82,7 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                                 vs.setJavaVersionType(JavaVersionType.CUSTOM);
                                 vs.setJavaDir(jre.getBinary().toString());
 
-                                return ControlFlow.CONTINUE;
+                                return ControlFlow.BREAK_OTHER;
                             });
                         }
                     });

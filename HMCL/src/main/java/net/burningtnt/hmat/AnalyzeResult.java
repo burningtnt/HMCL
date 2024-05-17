@@ -3,9 +3,9 @@ package net.burningtnt.hmat;
 import org.jackhuang.hmcl.task.Task;
 
 public abstract class AnalyzeResult<T> {
-    public final Analyzer<T> analyzer;
+    private final Analyzer<T> analyzer;
 
-    public final ResultID resultID;
+    private final ResultID resultID;
 
     public AnalyzeResult(Analyzer<T> analyzer, ResultID resultID) {
         this.analyzer = analyzer;
@@ -13,6 +13,14 @@ public abstract class AnalyzeResult<T> {
     }
 
     public abstract Task<Analyzer.ControlFlow> getSolver();
+
+    public Analyzer<T> getAnalyzer() {
+        return analyzer;
+    }
+
+    public ResultID getResultID() {
+        return resultID;
+    }
 
     public static <T> AnalyzeResult<T> manual(Analyzer<T> analyzer, ResultID resultID) {
         return new AnalyzeResult<T>(analyzer, resultID) {

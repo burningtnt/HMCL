@@ -1,15 +1,29 @@
 package net.burningtnt.hmat;
 
+import org.jackhuang.hmcl.task.Task;
+import org.jackhuang.hmcl.ui.SwingUtils;
 import org.jackhuang.hmcl.util.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public interface Analyzer<T> {
     ControlFlow analyze(T input, List<AnalyzeResult<T>> results) throws Exception;
 
     enum ControlFlow {
-        BREAK_OTHER, CONTINUE
+        /**
+         * <p>Breaking changes, which may affect all the features.</p>
+         *
+         * <p>HMAT will stop the analyzing process and drop all other analyzed results.</p>
+         */
+        BREAK_OTHER,
+        /**
+         * <p>Small changes</p>
+         *
+         * <p>HMAT will continue the analyzing process.</p>
+         */
+        CONTINUE
     }
 
     static <T> List<AnalyzeResult<T>> analyze(AnalyzableType<T> type, T input) {
@@ -25,10 +39,21 @@ public interface Analyzer<T> {
             }
 
             if (flow == ControlFlow.BREAK_OTHER) {
-                return results;
+                return Collections.singletonList(results.get(results.size() - 1));
             }
         }
 
         return results;
+    }
+
+    static <T> void execute(List<AnalyzeResult<T>> results) throws Exception {
+        for (AnalyzeResult<T> result : results) {
+            Task<ControlFlow> solver = result.getSolver();
+            if (solver == null) {
+                SwingUtils.showInfoDialog("Manual Operation: "+ result.getResultID());
+            } else {
+                solver.run();
+            }
+        }
     }
 }

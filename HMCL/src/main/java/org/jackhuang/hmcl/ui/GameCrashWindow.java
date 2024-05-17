@@ -20,13 +20,13 @@ package org.jackhuang.hmcl.ui;
 import com.jfoenix.controls.JFXButton;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import net.burningtnt.hmat.AnalyzableType;
 import net.burningtnt.hmat.AnalyzeResult;
@@ -86,12 +86,6 @@ public class GameCrashWindow extends Stage {
         getScene().getStylesheets().addAll(Theme.getTheme().getStylesheets(config().getLauncherFontFamily()));
         setTitle(i18n("game.crash.title"));
         FXUtils.setIcon(this);
-
-        Task.runAsync(() -> {
-            LogAnalyzable analyzable = new LogAnalyzable(version, analyzer, repository, managedProcess, exitType, launchOptions, logs.stream().map(Pair::getKey).collect(Collectors.toList()));
-            List<AnalyzeResult<LogAnalyzable>> results = Analyzer.analyze(AnalyzableType.Log.GAME, analyzable);
-            LOG.info("Successfully get these results: " + results);
-        }).start();
     }
 
     private void showLogWindow() {
@@ -135,7 +129,7 @@ public class GameCrashWindow extends Stage {
         GameCrashWindowView() {
             setStyle("-fx-background-color: white");
 
-            HBox titlePane = new HBox();
+            VBox titlePane = new VBox();
             {
                 Label title = new Label();
                 HBox.setHgrow(title, Priority.ALWAYS);
@@ -152,17 +146,26 @@ public class GameCrashWindow extends Stage {
                         break;
                 }
 
-
-                List<Node> notification = FXUtils.parseSegment(i18n("game.crash.feedback"), Controllers::onHyperlinkAction);
-
                 titlePane.setAlignment(Pos.CENTER);
                 titlePane.getStyleClass().addAll("jfx-tool-bar-second", "depth-1", "padding-8");
                 titlePane.getChildren().setAll(title);
-                titlePane.getChildren().addAll(notification);
+            }
+
+            TextFlow notifications = FXUtils.segmentToTextFlow(i18n("game.crash.feedback"), Controllers::onHyperlinkAction);
+            {
+                notifications.setPadding(new Insets(8));
+                notifications.setStyle("-fx-background-color: orange;");
             }
 
             HBox toolBar = new HBox();
             {
+                JFXButton solveNow = FXUtils.newRaisedButton(i18n("logwindow.solve_now"));
+                solveNow.setOnAction(e -> Task.runAsync(() -> {
+                    LogAnalyzable analyzable = new LogAnalyzable(version, analyzer, repository, managedProcess, exitType, launchOptions, logs.stream().map(Pair::getKey).collect(Collectors.toList()));
+                    List<AnalyzeResult<LogAnalyzable>> results = Analyzer.analyze(AnalyzableType.Log.GAME, analyzable);
+                    Analyzer.execute(results);
+                }).start());
+
                 JFXButton exportGameCrashInfoButton = FXUtils.newRaisedButton(i18n("logwindow.export_game_crash_logs"));
                 exportGameCrashInfoButton.setOnMouseClicked(e -> exportGameCrashInfo());
 
@@ -177,10 +180,10 @@ public class GameCrashWindow extends Stage {
                 toolBar.setPadding(new Insets(8));
                 toolBar.setSpacing(8);
                 toolBar.getStyleClass().add("jfx-tool-bar");
-                toolBar.getChildren().setAll(exportGameCrashInfoButton, logButton, helpButton);
+                toolBar.getChildren().setAll(solveNow, exportGameCrashInfoButton, logButton, helpButton);
             }
 
-            getChildren().setAll(titlePane, toolBar);
+            getChildren().setAll(titlePane, notifications, toolBar);
         }
     }
 }
