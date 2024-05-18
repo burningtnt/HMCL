@@ -50,7 +50,7 @@ public interface Analyzer<T> {
         for (AnalyzeResult<T> result : results) {
             Task<ControlFlow> solver = result.getSolver();
             if (solver == null) {
-                SwingUtils.showInfoDialog("Manual Operation: "+ result.getResultID());
+                SwingUtils.showInfoDialog("Manual Operation: " + result.getResultID());
             } else {
                 solver.run();
             }
