@@ -159,28 +159,24 @@ public class GameCrashWindow extends Stage {
 
             HBox toolBar = new HBox();
             {
-                JFXButton solveNow = FXUtils.newRaisedButton(i18n("logwindow.solve_now"));
-                solveNow.setOnAction(e -> Task.runAsync(() -> {
+                JFXButton analyzeButton = FXUtils.newRaisedButton(i18n("logwindow.solve_now"));
+                analyzeButton.setOnAction(e -> Task.runAsync(() -> {
                     LogAnalyzable analyzable = new LogAnalyzable(version, analyzer, repository, managedProcess, exitType, launchOptions, logs.stream().map(Pair::getKey).collect(Collectors.toList()));
                     List<AnalyzeResult<LogAnalyzable>> results = Analyzer.analyze(AnalyzableType.Log.GAME, analyzable);
                     Analyzer.execute(results);
                 }).start());
 
-                JFXButton exportGameCrashInfoButton = FXUtils.newRaisedButton(i18n("logwindow.export_game_crash_logs"));
-                exportGameCrashInfoButton.setOnMouseClicked(e -> exportGameCrashInfo());
-
-                JFXButton logButton = FXUtils.newRaisedButton(i18n("logwindow.title"));
-                logButton.setOnMouseClicked(e -> showLogWindow());
+                JFXButton exportInfoButton = FXUtils.newRaisedButton(i18n("logwindow.export_game_crash_logs"));
+                exportInfoButton.setOnMouseClicked(e -> exportGameCrashInfo());
 
                 JFXButton helpButton = FXUtils.newRaisedButton(i18n("help"));
                 helpButton.setOnAction(e -> FXUtils.openLink("https://docs.hmcl.net/help.html"));
                 runInFX(() -> FXUtils.installFastTooltip(helpButton, i18n("logwindow.help")));
 
-
                 toolBar.setPadding(new Insets(8));
                 toolBar.setSpacing(8);
                 toolBar.getStyleClass().add("jfx-tool-bar");
-                toolBar.getChildren().setAll(solveNow, exportGameCrashInfoButton, logButton, helpButton);
+                toolBar.getChildren().setAll(analyzeButton, exportInfoButton, helpButton);
             }
 
             getChildren().setAll(titlePane, notifications, toolBar);
