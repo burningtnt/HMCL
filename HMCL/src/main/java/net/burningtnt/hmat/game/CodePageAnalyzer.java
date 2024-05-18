@@ -54,6 +54,4 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
 
         return ControlFlow.CONTINUE;
     }
-
-    private static final boolean
 }
