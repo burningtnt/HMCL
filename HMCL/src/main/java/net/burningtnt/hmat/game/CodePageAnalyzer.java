@@ -12,12 +12,14 @@ import java.util.List;
 public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
     private static final String[] KEYS = {
             "java.lang.ClassNotFoundException",
-            "\u0020\u627e\u4e0d\u5230\u6216\u65e0\u6cd5\u52a0\u8f7d\u4e3b\u7c7b\u0020"
+            "\u0020\u627e\u4e0d\u5230\u6216\u65e0\u6cd5\u52a0\u8f7d\u4e3b\u7c7b\u0020",
+            "[LWJGL] Failed to load a library. Possible solutions:"
     };
 
     @Override
     public ControlFlow analyze(LogAnalyzable input, List<AnalyzeResult<LogAnalyzable>> results) throws Exception {
-        if (OperatingSystem.CURRENT_OS != OperatingSystem.WINDOWS || !StringUtils.containsChinese(input.getRepository().getBaseDirectory().toString())) {
+        // Non-Windows OperatingSystem and ascii path should NOT encounter this problem.
+        if (OperatingSystem.CURRENT_OS != OperatingSystem.WINDOWS || StringUtils.isASCII(input.getRepository().getBaseDirectory().toString())) {
             return ControlFlow.CONTINUE;
         }
 
@@ -27,8 +29,8 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
         }
 
         for (String key : KEYS) {
-            for (int i = 0;i < logs.size();i++) {
-                if (logs.get(i).contains(key)) {
+            for (String log : logs) {
+                if (log.contains(key)) {
                     RegistryUtils.QueryResult result = RegistryUtils.query(
                             RegistryUtils.Type.CURRENT_USER,
                             "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage", "ACP"
@@ -53,18 +55,5 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
         return ControlFlow.CONTINUE;
     }
 
-    private static boolean equals(List<String> a, String[] b) {
-        int l = b.length;
-        if (a.size() != l) {
-            return false;
-        }
-
-        for (int i = 0; i < l; i++) {
-            if (!a.get(i).equals(b[i])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
+    private static final boolean
 }

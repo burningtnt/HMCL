@@ -19,7 +19,7 @@ public class JRE32BitAnalyzer implements Analyzer<LogAnalyzable> {
             return ControlFlow.CONTINUE;
         }
 
-        for (int l = logs.size(), i = 0;i < l;i++) {
+        for (int l = logs.size(), i = 0; i < l; i++) {
             String current = logs.get(i);
             if (current.startsWith(P1_HEAD)) {
                 if (current.endsWith(P1_TAIL)) {
