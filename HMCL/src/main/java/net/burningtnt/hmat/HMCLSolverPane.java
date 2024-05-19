@@ -28,6 +28,12 @@ import java.util.Locale;
 import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
 
 public final class HMCLSolverPane<T> extends StackPane {
+    public static final int STATE_ANALYZING = 0;
+
+    public static final int STATE_FINISHED = 1;
+
+    public static final int STATE_REQUEST_REBOOT_GAME = 2;
+
     private final Iterator<AnalyzeResult<T>> results;
 
     private final VBox solverContainer = new VBox(8);
@@ -38,7 +44,7 @@ public final class HMCLSolverPane<T> extends StackPane {
 
     private final HMCLSolverController controller = new HMCLSolverController();
 
-    private final IntegerProperty state = new SimpleIntegerProperty(0);
+    private final IntegerProperty state = new SimpleIntegerProperty(STATE_ANALYZING);
 
     private AnalyzeResult<T> currentResult;
 
@@ -55,7 +61,7 @@ public final class HMCLSolverPane<T> extends StackPane {
         solverContainer.setPadding(new Insets(0, 0, 0, 8));
         if (!results.hasNext()) {
             solverContainer.getChildren().setAll(new Label(i18n("message.error")));
-            state.set(1);
+            state.set(STATE_FINISHED);
         } else {
             controller.transferTo(null);
         }
@@ -82,7 +88,7 @@ public final class HMCLSolverPane<T> extends StackPane {
 
             next.setText(i18n("analyzer.launch_again"));
             next.setDisable(false);
-            next.setOnAction(e -> state.set(2));
+            next.setOnAction(e -> state.set(STATE_REQUEST_REBOOT_GAME));
             return;
         }
 
@@ -162,7 +168,6 @@ public final class HMCLSolverPane<T> extends StackPane {
 
         private final List<String> buttons = new ArrayList<>();
 
-
         @Override
         public void setImage(Image image) {
             if (state != null && state != State.MANUAL) {
@@ -213,7 +218,7 @@ public final class HMCLSolverPane<T> extends StackPane {
             } else if (results.hasNext()) {
                 (currentSolver = (currentResult = results.next()).getSolver()).configure(this);
             } else {
-                HMCLSolverPane.this.state.set(1);
+                HMCLSolverPane.this.state.set(STATE_FINISHED);
             }
 
             update();

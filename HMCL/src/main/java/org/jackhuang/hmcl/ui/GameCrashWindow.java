@@ -137,11 +137,11 @@ public class GameCrashWindow extends Stage {
 
                         FXUtils.onChangeAndOperate(pane.stateProperty(), s -> {
                             switch (s.intValue()) {
-                                case 1: {
+                                case HMCLSolverPane.STATE_FINISHED: {
                                     getChildren().setAll(pane);
                                     break;
                                 }
-                                case 2: {
+                                case HMCLSolverPane.STATE_REQUEST_REBOOT_GAME:  {
                                     stage.close();
                                     Versions.launch(repository.getProfile(), version.getId());
                                     break;

@@ -3,7 +3,6 @@ package net.burningtnt.hmat;
 import org.jackhuang.hmcl.util.logging.Logger;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public interface Analyzer<T> {
