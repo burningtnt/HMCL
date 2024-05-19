@@ -141,7 +141,7 @@ public class GameCrashWindow extends Stage {
                                     getChildren().setAll(pane);
                                     break;
                                 }
-                                case HMCLSolverPane.STATE_REQUEST_REBOOT_GAME:  {
+                                case HMCLSolverPane.STATE_REQUEST_REBOOT_GAME: {
                                     stage.close();
                                     Versions.launch(repository.getProfile(), version.getId());
                                     break;
