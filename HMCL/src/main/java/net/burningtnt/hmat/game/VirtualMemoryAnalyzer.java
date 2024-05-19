@@ -3,6 +3,8 @@ package net.burningtnt.hmat.game;
 import net.burningtnt.hmat.AnalyzeResult;
 import net.burningtnt.hmat.Analyzer;
 import net.burningtnt.hmat.LogAnalyzable;
+import net.burningtnt.hmat.solver.Solver;
+import net.burningtnt.hmat.solver.SolverConfigurator;
 
 import java.util.List;
 
@@ -24,7 +26,17 @@ public class VirtualMemoryAnalyzer implements Analyzer<LogAnalyzable> {
 
         for (int i = Math.max(0, l - 10); i < l; i++) {
             if (logs.get(i).contains(KEY)) {
-                results.add(AnalyzeResult.manual(this, AnalyzeResult.ResultID.LOG_GAME_VIRTUAL_MEMORY));
+                results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_VIRTUAL_MEMORY, new Solver() {
+                    @Override
+                    public void configure(SolverConfigurator configurator) {
+                        // TODO
+                    }
+
+                    @Override
+                    public void callbackSelection(SolverConfigurator configurator, int selectionID) {
+                        // TODO
+                    }
+                }));
                 return ControlFlow.BREAK_OTHER;
             }
         }

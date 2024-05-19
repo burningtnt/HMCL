@@ -1,9 +1,6 @@
 package net.burningtnt.hmat;
 
-import net.burningtnt.hmat.game.CodePageAnalyzer;
-import net.burningtnt.hmat.game.JRE32BitAnalyzer;
-import net.burningtnt.hmat.game.JREVersionAnalyzer;
-import net.burningtnt.hmat.game.VirtualMemoryAnalyzer;
+import net.burningtnt.hmat.game.*;
 
 import java.util.Arrays;
 import java.util.Collections;

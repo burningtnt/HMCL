@@ -18,20 +18,20 @@
 package org.jackhuang.hmcl.ui;
 
 import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXProgressBar;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
-import net.burningtnt.hmat.AnalyzableType;
-import net.burningtnt.hmat.AnalyzeResult;
-import net.burningtnt.hmat.Analyzer;
-import net.burningtnt.hmat.LogAnalyzable;
+import net.burningtnt.hmat.*;
 import org.jackhuang.hmcl.download.LibraryAnalyzer;
 import org.jackhuang.hmcl.game.HMCLGameRepository;
 import org.jackhuang.hmcl.game.LaunchOptions;
@@ -40,10 +40,10 @@ import org.jackhuang.hmcl.game.Version;
 import org.jackhuang.hmcl.launch.ProcessListener;
 import org.jackhuang.hmcl.setting.Theme;
 import org.jackhuang.hmcl.task.Task;
+import org.jackhuang.hmcl.ui.versions.Versions;
 import org.jackhuang.hmcl.util.Log4jLevel;
 import org.jackhuang.hmcl.util.Pair;
 import org.jackhuang.hmcl.util.StringUtils;
-import org.jackhuang.hmcl.util.logging.Logger;
 import org.jackhuang.hmcl.util.platform.CommandBuilder;
 import org.jackhuang.hmcl.util.platform.ManagedProcess;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
@@ -53,7 +53,6 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -82,22 +81,11 @@ public class GameCrashWindow extends Stage {
         this.logs = logs;
         this.analyzer = LibraryAnalyzer.analyze(version, repository.getGameVersion(version).orElse(null));
 
-        setScene(new Scene(new GameCrashWindowView(), 800, 480));
+        GameCrashWindowView root = new GameCrashWindowView(this);
+        setScene(new Scene(root, 800, 480));
         getScene().getStylesheets().addAll(Theme.getTheme().getStylesheets(config().getLauncherFontFamily()));
         setTitle(i18n("game.crash.title"));
         FXUtils.setIcon(this);
-    }
-
-    private void showLogWindow() {
-        LogWindow logWindow = new LogWindow(managedProcess);
-
-        logWindow.logLine(Logger.filterForbiddenToken("Command: " + new CommandBuilder().addAll(managedProcess.getCommands())), Log4jLevel.INFO);
-        if (managedProcess.getClasspath() != null)
-            logWindow.logLine("ClassPath: " + managedProcess.getClasspath(), Log4jLevel.INFO);
-        for (Map.Entry<String, Log4jLevel> entry : logs)
-            logWindow.logLine(entry.getKey(), entry.getValue());
-
-        logWindow.showNormal();
     }
 
     private void exportGameCrashInfo() {
@@ -126,46 +114,56 @@ public class GameCrashWindow extends Stage {
     }
 
     private final class GameCrashWindowView extends VBox {
-        GameCrashWindowView() {
+        GameCrashWindowView(Stage stage) {
             setStyle("-fx-background-color: white");
 
-            VBox titlePane = new VBox();
+            VBox analyzing = new VBox();
             {
-                Label title = new Label();
-                HBox.setHgrow(title, Priority.ALWAYS);
+                JFXProgressBar progressBar = new JFXProgressBar();
+                FXUtils.onChangeAndOperate(widthProperty(), w -> progressBar.setPrefWidth(w.doubleValue() * 0.7));
 
-                switch (exitType) {
-                    case JVM_ERROR:
-                        title.setText(i18n("launch.failed.cannot_create_jvm"));
-                        break;
-                    case APPLICATION_ERROR:
-                        title.setText(i18n("launch.failed.exited_abnormally"));
-                        break;
-                    case SIGKILL:
-                        title.setText(i18n("launch.failed.sigkill"));
-                        break;
-                }
+                Label progressText = new Label(i18n("analyzer.analyzing"));
 
-                titlePane.setAlignment(Pos.CENTER);
-                titlePane.getStyleClass().addAll("jfx-tool-bar-second", "depth-1", "padding-8");
-                titlePane.getChildren().setAll(title);
+                analyzing.getChildren().setAll(progressBar, progressText);
+                VBox.setVgrow(analyzing, Priority.ALWAYS);
+                analyzing.setAlignment(Pos.CENTER);
+
+                Task.runAsync(() -> {
+                    List<AnalyzeResult<LogAnalyzable>> results = Analyzer.analyze(AnalyzableType.Log.GAME, new LogAnalyzable(version, analyzer, repository, managedProcess, exitType, launchOptions, logs.stream().map(Pair::getKey).collect(Collectors.toList())));
+                    runInFX(() -> {
+                        HMCLSolverPane<LogAnalyzable> pane = new HMCLSolverPane<>(results.iterator());
+                        VBox.setVgrow(pane, Priority.ALWAYS);
+                        getChildren().set(getChildren().indexOf(analyzing), pane);
+
+                        FXUtils.onChangeAndOperate(pane.stateProperty(), s -> {
+                            switch (s.intValue()) {
+                                case 1: {
+                                    getChildren().setAll(pane);
+                                    break;
+                                }
+                                case 2: {
+                                    stage.close();
+                                    Versions.launch(repository.getProfile(), version.getId());
+                                    break;
+                                }
+                            }
+                        });
+                    });
+                }).start();
             }
+
+            Separator spacing = new Separator();
+            FXUtils.onChangeAndOperate(heightProperty(), h -> FXUtils.setLimitHeight(spacing, h.doubleValue() * 0.05));
 
             TextFlow notifications = FXUtils.segmentToTextFlow(i18n("game.crash.feedback"), Controllers::onHyperlinkAction);
             {
                 notifications.setPadding(new Insets(8));
                 notifications.setStyle("-fx-background-color: orange;");
+                notifications.setTextAlignment(TextAlignment.LEFT);
             }
 
-            HBox toolBar = new HBox();
+            HBox toolBar = new HBox(8);
             {
-                JFXButton analyzeButton = FXUtils.newRaisedButton(i18n("logwindow.solve_now"));
-                analyzeButton.setOnAction(e -> Task.runAsync(() -> {
-                    LogAnalyzable analyzable = new LogAnalyzable(version, analyzer, repository, managedProcess, exitType, launchOptions, logs.stream().map(Pair::getKey).collect(Collectors.toList()));
-                    List<AnalyzeResult<LogAnalyzable>> results = Analyzer.analyze(AnalyzableType.Log.GAME, analyzable);
-                    Analyzer.execute(results);
-                }).start());
-
                 JFXButton exportInfoButton = FXUtils.newRaisedButton(i18n("logwindow.export_game_crash_logs"));
                 exportInfoButton.setOnMouseClicked(e -> exportGameCrashInfo());
 
@@ -174,12 +172,14 @@ public class GameCrashWindow extends Stage {
                 runInFX(() -> FXUtils.installFastTooltip(helpButton, i18n("logwindow.help")));
 
                 toolBar.setPadding(new Insets(8));
-                toolBar.setSpacing(8);
                 toolBar.getStyleClass().add("jfx-tool-bar");
-                toolBar.getChildren().setAll(analyzeButton, exportInfoButton, helpButton);
+                toolBar.getChildren().setAll(exportInfoButton, helpButton);
+                toolBar.setAlignment(Pos.CENTER_LEFT);
+
+                toolBar.setStyle("-fx-border-color: red;");
             }
 
-            getChildren().setAll(titlePane, notifications, toolBar);
+            getChildren().setAll(analyzing, spacing, notifications, toolBar);
         }
     }
 }

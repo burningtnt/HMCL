@@ -1,7 +1,5 @@
 package net.burningtnt.hmat;
 
-import org.jackhuang.hmcl.task.Task;
-import org.jackhuang.hmcl.ui.SwingUtils;
 import org.jackhuang.hmcl.util.logging.Logger;
 
 import java.util.ArrayList;
@@ -39,21 +37,10 @@ public interface Analyzer<T> {
             }
 
             if (flow == ControlFlow.BREAK_OTHER) {
-                return Collections.singletonList(results.get(results.size() - 1));
+                return results;
             }
         }
 
         return results;
-    }
-
-    static <T> void execute(List<AnalyzeResult<T>> results) throws Exception {
-        for (AnalyzeResult<T> result : results) {
-            Task<ControlFlow> solver = result.getSolver();
-            if (solver == null) {
-                SwingUtils.showInfoDialog("Manual Operation: " + result.getResultID());
-            } else {
-                solver.run();
-            }
-        }
     }
 }

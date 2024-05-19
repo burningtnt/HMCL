@@ -1,18 +1,19 @@
 package net.burningtnt.hmat;
 
-import org.jackhuang.hmcl.task.Task;
+import net.burningtnt.hmat.solver.Solver;
 
-public abstract class AnalyzeResult<T> {
+public final class AnalyzeResult<T> {
     private final Analyzer<T> analyzer;
 
     private final ResultID resultID;
 
-    public AnalyzeResult(Analyzer<T> analyzer, ResultID resultID) {
+    private final Solver Solver;
+
+    public AnalyzeResult(Analyzer<T> analyzer, ResultID resultID, Solver solver) {
         this.analyzer = analyzer;
         this.resultID = resultID;
+        Solver = solver;
     }
-
-    public abstract Task<Analyzer.ControlFlow> getSolver();
 
     public Analyzer<T> getAnalyzer() {
         return analyzer;
@@ -22,13 +23,8 @@ public abstract class AnalyzeResult<T> {
         return resultID;
     }
 
-    public static <T> AnalyzeResult<T> manual(Analyzer<T> analyzer, ResultID resultID) {
-        return new AnalyzeResult<T>(analyzer, resultID) {
-            @Override
-            public Task<Analyzer.ControlFlow> getSolver() {
-                return null;
-            }
-        };
+    public Solver getSolver() {
+        return Solver;
     }
 
     public enum ResultID {
