@@ -1,6 +1,5 @@
 package net.burningtnt.hmat.game;
 
-import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import net.burningtnt.hmat.AnalyzeResult;
@@ -8,6 +7,7 @@ import net.burningtnt.hmat.Analyzer;
 import net.burningtnt.hmat.LogAnalyzable;
 import net.burningtnt.hmat.solver.Solver;
 import net.burningtnt.hmat.solver.SolverConfigurator;
+import org.jackhuang.hmcl.Launcher;
 import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.logging.Logger;
@@ -83,22 +83,22 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
                                     Logger.LOG.warning("Cannot open intl.", e);
                                 }
                             } else if (selectionID == BTN_NEXT || selectionID == BTN_REBOOT_COMPUTER) {
-                                Platform.runLater(() -> {
-                                    Alert alert = new Alert(
-                                            Alert.AlertType.WARNING,
-                                            i18n("analyzer.result.log_game_code_page.button.reboot_computer"),
-                                            ButtonType.OK,
-                                            ButtonType.CANCEL
-                                    );
-                                    alert.setTitle(i18n("settings.launcher.launcher_log.export"));
-                                    if (alert.showAndWait().orElse(null) == ButtonType.OK) {
-                                        try {
-                                            Runtime.getRuntime().exec(new String[]{"shutdown", "/sg", "/d", "4:1"});
-                                        } catch (IOException e) {
-                                            Logger.LOG.warning("Cannot reboot this computer.", e);
-                                        }
+                                Alert alert = new Alert(
+                                        Alert.AlertType.WARNING,
+                                        i18n("analyzer.result.log_game_code_page.button.reboot_computer"),
+                                        ButtonType.OK,
+                                        ButtonType.CANCEL
+                                );
+                                alert.setTitle(i18n("settings.launcher.launcher_log.export"));
+                                if (alert.showAndWait().orElse(null) == ButtonType.OK) {
+                                    Launcher.stopApplication();
+                                    try {
+                                        Thread.sleep(800);
+                                        Runtime.getRuntime().exec(new String[]{"shutdown", "/sg", "/d", "4:1"});
+                                    } catch (IOException | InterruptedException e) {
+                                        Logger.LOG.warning("Cannot reboot this computer.", e);
                                     }
-                                });
+                                }
                             }
                         }
                     }));
