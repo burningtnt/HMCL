@@ -1,23 +1,24 @@
 package net.burningtnt.hmat.game;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import net.burningtnt.hmat.AnalyzeResult;
 import net.burningtnt.hmat.Analyzer;
 import net.burningtnt.hmat.LogAnalyzable;
 import net.burningtnt.hmat.solver.Solver;
 import net.burningtnt.hmat.solver.SolverConfigurator;
+import org.jackhuang.hmcl.Launcher;
+import org.jackhuang.hmcl.ui.FXUtils;
+import org.jackhuang.hmcl.util.Lang;
+import org.jackhuang.hmcl.util.logging.Logger;
 
+import java.io.IOException;
 import java.util.List;
 
-/**
- * OpenJDK 64-Bit Server VM warning: INFO: os::commit_memory(0x0000000718000000, 167772160, 0) failed; error='页面文件太小，无法完成操作。' (DOS error/errno=1455)
- * #
- * # There is insufficient memory for the Java Runtime Environment to continue.
- * # Native memory allocation (mmap) failed to map 167772160 bytes for G1 virtual space
- * # An error report file with more information is saved as:
- * # <...file path...>
- */
+import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
+
 public class VirtualMemoryAnalyzer implements Analyzer<LogAnalyzable> {
-    private static final String KEY = "error='\\u9875\\u9762\\u6587\\u4ef6\\u592a\\u5c0f\\uff0c\\u65e0\\u6cd5\\u5b8c\\u6210\\u64cd\\u4f5c\\u3002'";
+    private static final String KEY = "There is insufficient memory for the Java Runtime Environment to continue.";
 
     @Override
     public ControlFlow analyze(LogAnalyzable input, List<AnalyzeResult<LogAnalyzable>> results) {
@@ -27,14 +28,77 @@ public class VirtualMemoryAnalyzer implements Analyzer<LogAnalyzable> {
         for (int i = Math.max(0, l - 10); i < l; i++) {
             if (logs.get(i).contains(KEY)) {
                 results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_VIRTUAL_MEMORY, new Solver() {
+                    private int BTN_OPEN_SYS_DM = -1;
+
                     @Override
                     public void configure(SolverConfigurator configurator) {
-                        // TODO
+                        configurator.setDescription(i18n("analyzer.result.log_game_virtual_memory.steps.1"));
+                        configurator.setImage(FXUtils.newBuiltinImage("/assets/img/hmat/log/game/virtual_memory/step_1.png"));
+
+                        BTN_OPEN_SYS_DM = configurator.putButton(i18n("analyzer.result.log_game_virtual_memory.button.open_sys_dm"));
                     }
 
                     @Override
                     public void callbackSelection(SolverConfigurator configurator, int selectionID) {
-                        // TODO
+                        if (selectionID == BTN_OPEN_SYS_DM) {
+                            try {
+                                Runtime.getRuntime().exec(new String[]{
+                                        "rundll32.exe",
+                                        "shell32.dll,Control_RunDLL",
+                                        "sysdm.cpl"
+                                });
+                            } catch (IOException e) {
+                                Logger.LOG.warning("Cannot open sysdm.", e);
+                            }
+                        } else if (selectionID == BTN_NEXT) {
+                            configurator.transferTo(new Solver() {
+                                @Override
+                                public void configure(SolverConfigurator configurator) {
+                                    configurator.setDescription(i18n("analyzer.result.log_game_virtual_memory.steps.2"));
+                                    configurator.setImage(FXUtils.newBuiltinImage("/assets/img/hmat/log/game/virtual_memory/step_2.png"));
+                                }
+
+                                @Override
+                                public void callbackSelection(SolverConfigurator configurator, int selectionID) {
+                                    if (selectionID == BTN_NEXT) {
+                                        configurator.transferTo(new Solver() {
+                                            private int BTN_REBOOT_COMPUTER = -1;
+
+                                            @Override
+                                            public void configure(SolverConfigurator configurator) {
+                                                configurator.setDescription(i18n("analyzer.result.log_game_virtual_memory.steps.3"));
+                                                configurator.setImage(FXUtils.newBuiltinImage("/assets/img/hmat/log/game/virtual_memory/step_3.png"));
+
+                                                BTN_REBOOT_COMPUTER = configurator.putButton(i18n("analyzer.result.log_game_virtual_memory.button.reboot_computer"));
+                                            }
+
+                                            @Override
+                                            public void callbackSelection(SolverConfigurator configurator, int selectionID) {
+                                                if (selectionID == BTN_NEXT || selectionID == BTN_REBOOT_COMPUTER) {
+                                                    Alert alert = new Alert(
+                                                            Alert.AlertType.WARNING,
+                                                            i18n("analyzer.result.log_game_virtual_memory.button.reboot_computer"),
+                                                            ButtonType.OK,
+                                                            ButtonType.CANCEL
+                                                    );
+                                                    if (alert.showAndWait().orElse(null) == ButtonType.OK) {
+                                                        Launcher.stopApplication();
+                                                        Lang.thread(() -> {
+                                                            try {
+                                                                Thread.sleep(800);
+                                                                Runtime.getRuntime().exec(new String[]{"shutdown", "/sg", "/d", "4:1"});
+                                                            } catch (IOException | InterruptedException e) {
+                                                                Logger.LOG.warning("Cannot reboot this computer.", e);
+                                                            }
+                                                        }, "Rebooting Computer Thread", false);
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
                     }
                 }));
                 return ControlFlow.BREAK_OTHER;

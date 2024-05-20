@@ -211,7 +211,8 @@ public final class HMCLSolverPane<T> extends StackPane {
             }
             state = State.MANUAL;
             this.buttons.add(text);
-            return this.buttons.size();
+            // 0 - 255 are kept for internal use.
+            return this.buttons.size() + 255;
         }
 
         @Override

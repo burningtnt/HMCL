@@ -65,7 +65,7 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
                         @Override
                         public void configure(SolverConfigurator configurator) {
                             configurator.setDescription(i18n("analyzer.result.log_game_code_page.steps.1"));
-                            configurator.setImage(FXUtils.newBuiltinImage("/assets/img/hmat/code_page/step_1.png"));
+                            configurator.setImage(FXUtils.newBuiltinImage("/assets/img/hmat/log/game/code_page/step_1.png"));
 
                             BTN_OPEN_INTL = configurator.putButton(i18n("analyzer.result.log_game_code_page.button.open_intl"));
                             BTN_REBOOT_COMPUTER = configurator.putButton(i18n("analyzer.result.log_game_code_page.button.reboot_computer"));
@@ -90,7 +90,6 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
                                         ButtonType.OK,
                                         ButtonType.CANCEL
                                 );
-                                alert.setTitle(i18n("settings.launcher.launcher_log.export"));
                                 if (alert.showAndWait().orElse(null) == ButtonType.OK) {
                                     Launcher.stopApplication();
                                     Lang.thread(() -> {
