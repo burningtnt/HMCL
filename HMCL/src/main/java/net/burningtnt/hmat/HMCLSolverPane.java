@@ -104,9 +104,18 @@ public final class HMCLSolverPane<T> extends StackPane {
                 }
                 progressBar.progressProperty().bind(task.progressProperty());
                 next.setDisable(true);
-                task.whenComplete(Schedulers.javafx(), exception -> currentSolver.callbackSelection(controller, 0)).start();
-
                 Label txt = new Label(i18n("analyzer.processing"));
+
+                task.whenComplete(Schedulers.javafx(), exception -> {
+                    if (exception != null) {
+                        currentSolver.callbackSelection(controller, 0);
+                    } else {
+                        progressBar.progressProperty().unbind();
+                        progressBar.setProgress(1);
+                        txt.setText(i18n("analyzer.failed"));
+                    }
+                }).start();
+
                 solverContainer.getChildren().setAll(progressBar, txt);
                 break;
             }

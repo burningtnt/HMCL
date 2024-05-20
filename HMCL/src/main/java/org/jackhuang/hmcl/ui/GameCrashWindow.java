@@ -39,6 +39,7 @@ import org.jackhuang.hmcl.game.LogExporter;
 import org.jackhuang.hmcl.game.Version;
 import org.jackhuang.hmcl.launch.ProcessListener;
 import org.jackhuang.hmcl.setting.Theme;
+import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.ui.versions.Versions;
 import org.jackhuang.hmcl.util.Log4jLevel;
@@ -128,10 +129,11 @@ public class GameCrashWindow extends Stage {
                 VBox.setVgrow(analyzing, Priority.ALWAYS);
                 analyzing.setAlignment(Pos.CENTER);
 
-                Task.runAsync(() -> {
-                    List<AnalyzeResult<LogAnalyzable>> results = Analyzer.analyze(AnalyzableType.Log.GAME, new LogAnalyzable(version, analyzer, repository, managedProcess, exitType, launchOptions, logs.stream().map(Pair::getKey).collect(Collectors.toList())));
-                    runInFX(() -> {
-                        HMCLSolverPane<LogAnalyzable> pane = new HMCLSolverPane<>(results.iterator());
+                Task.supplyAsync(() -> Analyzer.analyze(AnalyzableType.Log.GAME, new LogAnalyzable(
+                        version, analyzer, repository, managedProcess, exitType, launchOptions, logs.stream().map(Pair::getKey).collect(Collectors.toList()))
+                )).whenComplete(Schedulers.javafx(), (result, exception) -> {
+                    if (exception == null) {
+                        HMCLSolverPane<LogAnalyzable> pane = new HMCLSolverPane<>(result.iterator());
                         VBox.setVgrow(pane, Priority.ALWAYS);
                         getChildren().set(getChildren().indexOf(analyzing), pane);
 
@@ -148,8 +150,11 @@ public class GameCrashWindow extends Stage {
                                 }
                             }
                         });
-                    });
-                }).start();
+                    } else {
+                        progressBar.setProgress(1);
+                        progressText.setText(i18n("analyzer.failed"));
+                    }
+                });
             }
 
             Separator spacing = new Separator();
