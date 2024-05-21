@@ -22,9 +22,9 @@ public interface AnalyzableType<T> {
         GAME;
 
         private static final List<Analyzer<LogAnalyzable>> ANALYZERS = Arrays.asList(
+                new CodePageAnalyzer(),
                 new JRE32BitAnalyzer(),
                 new JREVersionAnalyzer(),
-                new CodePageAnalyzer(),
                 new VirtualMemoryAnalyzer()
         );
 

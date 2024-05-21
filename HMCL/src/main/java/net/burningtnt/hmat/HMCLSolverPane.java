@@ -14,11 +14,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import net.burningtnt.hmat.solver.Solver;
 import net.burningtnt.hmat.solver.SolverConfigurator;
 import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
+import org.jackhuang.hmcl.ui.Controllers;
 import org.jackhuang.hmcl.ui.FXUtils;
+import org.jackhuang.hmcl.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -71,7 +75,9 @@ public final class HMCLSolverPane<T> extends StackPane {
         HBox titleBar = new HBox(8);
         titleBar.getStyleClass().addAll("jfx-tool-bar-second", "depth-1", "padding-8");
         titleBar.setAlignment(Pos.BASELINE_LEFT);
-        titleBar.getChildren().setAll(info, next);
+        HBox spacing = new HBox();
+        HBox.setHgrow(spacing, Priority.ALWAYS);
+        titleBar.getChildren().setAll(info, spacing, next);
 
         container.getChildren().setAll(titleBar, solverContainer);
 
@@ -106,17 +112,19 @@ public final class HMCLSolverPane<T> extends StackPane {
                 next.setDisable(true);
                 Label txt = new Label(i18n("analyzer.processing"));
 
+                solverContainer.getChildren().setAll(progressBar, txt);
+
                 task.whenComplete(Schedulers.javafx(), exception -> {
-                    if (exception != null) {
+                    if (exception == null) {
                         currentSolver.callbackSelection(controller, 0);
                     } else {
                         progressBar.progressProperty().unbind();
                         progressBar.setProgress(1);
-                        txt.setText(i18n("analyzer.failed"));
+                        TextFlow flow = FXUtils.segmentToTextFlow(i18n("analyzer.failed"), Controllers::onHyperlinkAction);
+                        flow.setTextAlignment(TextAlignment.CENTER);
+                        solverContainer.getChildren().setAll(progressBar, flow);
                     }
                 }).start();
-
-                solverContainer.getChildren().setAll(progressBar, txt);
                 break;
             }
             case MANUAL: {
@@ -125,13 +133,17 @@ public final class HMCLSolverPane<T> extends StackPane {
                 next.setDisable(false);
                 next.setOnAction(e -> currentSolver.callbackSelection(controller, 0));
                 if (controller.description != null) {
-                    solverContainer.getChildren().add(new Label(controller.description));
+                    TextFlow flow = FXUtils.segmentToTextFlow(controller.description, Controllers::onHyperlinkAction);
+                    HBox box = new HBox();
+                    box.getChildren().setAll(flow);
+//                    box.setStyle("-fx-border-color: red;");
+                    solverContainer.getChildren().add(box);
                 }
                 if (!controller.buttons.isEmpty()) {
                     HBox buttons = new HBox(8);
-                    for (String btnText : controller.buttons) {
-                        Button button = FXUtils.newBorderButton(btnText);
-                        button.setOnAction(e -> currentSolver.callbackSelection(controller, buttons.getChildren().size() + 1));
+                    for (Pair<String, Integer> btnInfo : controller.buttons) {
+                        Button button = FXUtils.newBorderButton(btnInfo.getKey());
+                        button.setOnAction(e -> currentSolver.callbackSelection(controller, btnInfo.getValue()));
                         buttons.getChildren().add(button);
                     }
                     solverContainer.getChildren().add(buttons);
@@ -175,7 +187,7 @@ public final class HMCLSolverPane<T> extends StackPane {
 
         private Task<?> task;
 
-        private final List<String> buttons = new ArrayList<>();
+        private final List<Pair<String, Integer>> buttons = new ArrayList<>();
 
         @Override
         public void setImage(Image image) {
@@ -210,9 +222,11 @@ public final class HMCLSolverPane<T> extends StackPane {
                 throw new IllegalStateException("State " + state + " doesn't allowed setImage.");
             }
             state = State.MANUAL;
-            this.buttons.add(text);
             // 0 - 255 are kept for internal use.
-            return this.buttons.size() + 255;
+            int id = this.buttons.size() + 255;
+
+            this.buttons.add(Pair.pair(text, id));
+            return id;
         }
 
         @Override

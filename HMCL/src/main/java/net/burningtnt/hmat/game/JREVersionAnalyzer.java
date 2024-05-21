@@ -59,33 +59,31 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
             for (Pattern pattern : KEYS.keySet()) {
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
-                    int javaVersion;
+                    int jv;
                     try {
-                        javaVersion = KEYS.get(pattern).applyAsInt(matcher);
+                        jv = KEYS.get(pattern).applyAsInt(matcher);
                     } catch (RuntimeException ignored) {
                         continue;
                     }
 
-                    GameJavaVersion normalizedVersion = GameJavaVersion.normalize(javaVersion);
+                    GameJavaVersion javaVersion = GameJavaVersion.normalize(jv);
                     // TODO: Support non-major java version.
                     // TODO: GameJavaVersion.get(javaMajor) may be null.
                     results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_JRE_VERSION, new Solver() {
                         @Override
                         public void configure(SolverConfigurator configurator) {
                             configurator.setTask(Task.composeAsync(() -> {
-                                int nv = normalizedVersion.getMajorVersion();
+                                int majorVersion = javaVersion.getMajorVersion();
                                 for (JavaRuntime jre : JavaManager.getAllJava()) {
-                                    if (jre.getParsedVersion() == nv) {
-                                        // TODO: Support non-major java version.
+                                    if (jre.getParsedVersion() == majorVersion) {
                                         return Task.supplyAsync(() -> jre);
                                     }
                                 }
-                                // TODO: GameJavaVersion.get(javaMajor) may be null.
-                                return JavaManager.installJava(DownloadProviders.getDownloadProvider(), Platform.CURRENT_PLATFORM, normalizedVersion);
+                                return JavaManager.installJava(DownloadProviders.getDownloadProvider(), Platform.CURRENT_PLATFORM, javaVersion);
                             }).thenAcceptAsync(Schedulers.javafx(), jre -> {
                                 VersionSetting vs = input.getRepository().getVersionSetting(input.getVersion().getId());
-                                vs.setJavaVersionType(JavaVersionType.CUSTOM);
-                                vs.setJavaDir(jre.getBinary().toString());
+                                vs.setJavaVersionType(JavaVersionType.DETECTED);
+                                vs.setDefaultJavaPath(jre.getBinary().toString());
                             }));
                         }
 

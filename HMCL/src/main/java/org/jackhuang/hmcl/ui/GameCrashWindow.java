@@ -31,7 +31,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
-import net.burningtnt.hmat.*;
+import net.burningtnt.hmat.AnalyzableType;
+import net.burningtnt.hmat.Analyzer;
+import net.burningtnt.hmat.HMCLSolverPane;
+import net.burningtnt.hmat.LogAnalyzable;
 import org.jackhuang.hmcl.download.LibraryAnalyzer;
 import org.jackhuang.hmcl.game.HMCLGameRepository;
 import org.jackhuang.hmcl.game.LaunchOptions;
@@ -140,7 +143,6 @@ public class GameCrashWindow extends Stage {
                         FXUtils.onChangeAndOperate(pane.stateProperty(), s -> {
                             switch (s.intValue()) {
                                 case HMCLSolverPane.STATE_FINISHED: {
-                                    getChildren().setAll(pane);
                                     break;
                                 }
                                 case HMCLSolverPane.STATE_REQUEST_REBOOT_GAME: {
@@ -152,9 +154,11 @@ public class GameCrashWindow extends Stage {
                         });
                     } else {
                         progressBar.setProgress(1);
-                        progressText.setText(i18n("analyzer.failed"));
+                        TextFlow element = FXUtils.segmentToTextFlow(i18n("analyzer.failed"), Controllers::onHyperlinkAction);
+                        element.setTextAlignment(TextAlignment.CENTER);
+                        analyzing.getChildren().set(analyzing.getChildren().indexOf(progressText), element);
                     }
-                });
+                }).start();
             }
 
             Separator spacing = new Separator();
@@ -180,8 +184,6 @@ public class GameCrashWindow extends Stage {
                 toolBar.getStyleClass().add("jfx-tool-bar");
                 toolBar.getChildren().setAll(exportInfoButton, helpButton);
                 toolBar.setAlignment(Pos.CENTER_LEFT);
-
-                toolBar.setStyle("-fx-border-color: red;");
             }
 
             getChildren().setAll(analyzing, spacing, notifications, toolBar);
