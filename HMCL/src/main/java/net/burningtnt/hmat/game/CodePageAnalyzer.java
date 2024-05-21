@@ -1,7 +1,5 @@
 package net.burningtnt.hmat.game;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import net.burningtnt.hmat.AnalyzeResult;
 import net.burningtnt.hmat.Analyzer;
 import net.burningtnt.hmat.LogAnalyzable;
@@ -9,7 +7,6 @@ import net.burningtnt.hmat.solver.Solver;
 import net.burningtnt.hmat.solver.SolverConfigurator;
 import org.jackhuang.hmcl.Launcher;
 import org.jackhuang.hmcl.ui.FXUtils;
-import org.jackhuang.hmcl.util.Lang;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.logging.Logger;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
@@ -84,23 +81,7 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
                                     Logger.LOG.warning("Cannot open intl.", e);
                                 }
                             } else if (selectionID == BTN_NEXT || selectionID == BTN_REBOOT_COMPUTER) {
-                                Alert alert = new Alert(
-                                        Alert.AlertType.WARNING,
-                                        i18n("analyzer.result.log_game_code_page.button.reboot_computer"),
-                                        ButtonType.OK,
-                                        ButtonType.CANCEL
-                                );
-                                if (alert.showAndWait().orElse(null) == ButtonType.OK) {
-                                    Launcher.stopApplication();
-                                    Lang.thread(() -> {
-                                        try {
-                                            Thread.sleep(800);
-                                            Runtime.getRuntime().exec(new String[]{"shutdown", "/sg", "/d", "4:1"});
-                                        } catch (IOException | InterruptedException e) {
-                                            Logger.LOG.warning("Cannot reboot this computer.", e);
-                                        }
-                                    }, "Rebooting Computer Thread", false);
-                                }
+                                Launcher.rebootComputer();
                             }
                         }
                     }));

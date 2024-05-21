@@ -1,7 +1,5 @@
 package net.burningtnt.hmat.game;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import net.burningtnt.hmat.AnalyzeResult;
 import net.burningtnt.hmat.Analyzer;
 import net.burningtnt.hmat.LogAnalyzable;
@@ -9,7 +7,6 @@ import net.burningtnt.hmat.solver.Solver;
 import net.burningtnt.hmat.solver.SolverConfigurator;
 import org.jackhuang.hmcl.Launcher;
 import org.jackhuang.hmcl.ui.FXUtils;
-import org.jackhuang.hmcl.util.Lang;
 import org.jackhuang.hmcl.util.logging.Logger;
 
 import java.io.IOException;
@@ -75,23 +72,7 @@ public class VirtualMemoryAnalyzer implements Analyzer<LogAnalyzable> {
                                             @Override
                                             public void callbackSelection(SolverConfigurator configurator, int selectionID) {
                                                 if (selectionID == BTN_NEXT || selectionID == BTN_REBOOT_COMPUTER) {
-                                                    Alert alert = new Alert(
-                                                            Alert.AlertType.WARNING,
-                                                            i18n("analyzer.result.log_game_virtual_memory.button.reboot_computer"),
-                                                            ButtonType.OK,
-                                                            ButtonType.CANCEL
-                                                    );
-                                                    if (alert.showAndWait().orElse(null) == ButtonType.OK) {
-                                                        Launcher.stopApplication();
-                                                        Lang.thread(() -> {
-                                                            try {
-                                                                Thread.sleep(800);
-                                                                Runtime.getRuntime().exec(new String[]{"shutdown", "/sg", "/d", "4:1"});
-                                                            } catch (IOException | InterruptedException e) {
-                                                                Logger.LOG.warning("Cannot reboot this computer.", e);
-                                                            }
-                                                        }, "Rebooting Computer Thread", false);
-                                                    }
+                                                    Launcher.rebootComputer();
                                                 }
                                             }
                                         });
