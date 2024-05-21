@@ -8,12 +8,12 @@ public interface SolverConfigurator {
 
     void setDescription(String description);
 
-    void setTask(Task<?> task);
+    int putButton(String text);
 
     /**
-     * @return Unique Selection ID
+     * Make this step automatically resolved.
      */
-    int putButton(String text);
+    void bindTask(Task<?> task);
 
     /**
      * Transfer to another Solver.

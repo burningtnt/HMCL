@@ -51,7 +51,7 @@ public class JRE32BitAnalyzer implements Analyzer<LogAnalyzable> {
         results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_JRE_32BIT, new Solver() {
             @Override
             public void configure(SolverConfigurator configurator) {
-                configurator.setTask(JavaManager.uninstallJava(input.getLaunchOptions().getJava()).thenComposeAsync(() -> {
+                configurator.bindTask(JavaManager.uninstallJava(input.getLaunchOptions().getJava()).thenComposeAsync(() -> {
                     GameVersionNumber gameVersion = GameVersionNumber.asGameVersion(input.getRepository().getGameVersion(input.getVersion()));
                     JavaRuntime runtime = JavaManager.findSuitableJava(gameVersion, input.getVersion());
                     if (runtime != null) {

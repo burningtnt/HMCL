@@ -72,7 +72,7 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                     results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_JRE_VERSION, new Solver() {
                         @Override
                         public void configure(SolverConfigurator configurator) {
-                            configurator.setTask(Task.composeAsync(() -> {
+                            configurator.bindTask(Task.composeAsync(() -> {
                                 int majorVersion = javaVersion.getMajorVersion();
                                 for (JavaRuntime jre : JavaManager.getAllJava()) {
                                     if (jre.getParsedVersion() == majorVersion) {

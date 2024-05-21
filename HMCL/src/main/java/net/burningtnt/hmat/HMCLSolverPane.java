@@ -208,7 +208,7 @@ public final class HMCLSolverPane<T> extends StackPane {
         }
 
         @Override
-        public void setTask(Task<?> task) {
+        public void bindTask(Task<?> task) {
             if (state != null && state != State.AUTO) {
                 throw new IllegalStateException("State " + state + " doesn't allowed setImage.");
             }
