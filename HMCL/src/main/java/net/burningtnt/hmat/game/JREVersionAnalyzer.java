@@ -15,41 +15,50 @@ import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.util.Lang;
 import org.jackhuang.hmcl.util.platform.Platform;
+import org.jackhuang.hmcl.util.versioning.GameVersionNumber;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.ToIntFunction;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.jackhuang.hmcl.util.Pair.pair;
 
 public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
-    private static final Map<Pattern, ToIntFunction<Matcher>> KEYS = Lang.mapOf(
+    private static final Map<Pattern, BiFunction<LogAnalyzable, Matcher, GameJavaVersion>> KEYS = Lang.mapOf(
             pair(
+                    // Mixin requires a higher class file version. Upgrade Java.
                     Pattern.compile("java.lang.IllegalArgumentException: The requested compatibility level JAVA_(?<version>[0-9]*) could not be set. Level is not supported by the active JRE or ASM version."),
-                    matcher -> Integer.parseInt(matcher.group("version"))
+                    (input, matcher) -> GameJavaVersion.normalize(Integer.parseInt(matcher.group("version")))
             ), pair(
+                    // Only Java 11 provides this internal function. Set to Java 11.
                     Pattern.compile("Caused by: java.lang.NoSuchMethodError: 'java.lang.Class sun.misc.Unsafe.defineAnonymousClass\\(java.lang.Class, byte\\[], java\\.lang\\.Object\\[]\\)'"),
-                    matcher -> 11
+                    (input, matcher) -> GameJavaVersion.JAVA_8 // TODO: Enable GameJavaVersion to support downloading JAVA_8_312, JAVA_11
             ), pair(
-                    Pattern.compile("java.lang.UnsupportedClassVersionError: .* has been compiled by a more recent version of the Java Runtime \\(class file version (?<target>[0-9]*)(\\.[0-9]*)?\\), this version of the Java Runtime only recognizes class file versions up to (?<current>[0-9]*)(\\.[0-9]*)?"),
-                    matcher -> {
+                    // JVM cannot read the class files. Upgrade Java.
+                    Pattern.compile("java.lang.UnsupportedClassVersionError: [a-zA-Z0-9/]* has been compiled by a more recent version of the Java Runtime \\(class file version (?<target>[0-9]*)(\\.[0-9]*)?\\), this version of the Java Runtime only recognizes class file versions up to (?<current>[0-9]*)(\\.[0-9]*)?"),
+                    (input, matcher) -> {
                         int classVersionMagic = Integer.parseInt(matcher.group("target"));
                         if (classVersionMagic < 52) {
                             throw new IllegalArgumentException("Illegal class version magic number: " + classVersionMagic);
                         }
-                        return classVersionMagic - 44;
+                        return GameJavaVersion.normalize(classVersionMagic - 44);
                     }
             ), pair(
+                    // JVM cannot read the class files. Upgrade Java.
                     Pattern.compile("java.lang.IllegalArgumentException: Unsupported class file major version (?<target>[0-9]*)(\\.[0-9]*)?"),
-                    matcher -> {
+                    (input, matcher) -> {
                         int classVersionMagic = Integer.parseInt(matcher.group("target"));
                         if (classVersionMagic < 52) {
                             throw new IllegalArgumentException("Illegal class version magic number: " + classVersionMagic);
                         }
-                        return classVersionMagic - 44;
+                        return GameJavaVersion.normalize(classVersionMagic - 44);
                     }
+            ), pair(
+                    // ASM cannot read the class files. Downgrade Java
+                    Pattern.compile("Error loading class: (java|jdk)/[a-zA-Z0-9/]* \\(java.lang.IllegalArgumentException: Class file major version [0-9]* is not supported by active ASM \\(version [0-9]*(\\.[0-9]*)? supports class version [0-9]*\\), reading (java|jdk)/[a-zA-Z0-9/]*\\)"),
+                    (input, matcher) -> GameJavaVersion.getMinimumJavaVersion(GameVersionNumber.asGameVersion(input.getRepository().getGameVersion(input.getVersion())))
             )
     );
 
@@ -59,14 +68,13 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
             for (Pattern pattern : KEYS.keySet()) {
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
-                    int jv;
+                    GameJavaVersion javaVersion;
                     try {
-                        jv = KEYS.get(pattern).applyAsInt(matcher);
+                        javaVersion = KEYS.get(pattern).apply(input, matcher);
                     } catch (RuntimeException ignored) {
                         continue;
                     }
 
-                    GameJavaVersion javaVersion = GameJavaVersion.normalize(jv);
                     // TODO: Support non-major java version.
                     // TODO: GameJavaVersion.get(javaMajor) may be null.
                     results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_JRE_VERSION, new Solver() {
