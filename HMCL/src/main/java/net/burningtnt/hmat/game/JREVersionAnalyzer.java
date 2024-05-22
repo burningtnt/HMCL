@@ -75,8 +75,6 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                         continue;
                     }
 
-                    // TODO: Support non-major java version.
-                    // TODO: GameJavaVersion.get(javaMajor) may be null.
                     results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_JRE_VERSION, new Solver() {
                         @Override
                         public void configure(SolverConfigurator configurator) {
@@ -91,6 +89,7 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                             }).thenAcceptAsync(Schedulers.javafx(), jre -> {
                                 VersionSetting vs = input.getRepository().getVersionSetting(input.getVersion().getId());
                                 vs.setJavaVersionType(JavaVersionType.DETECTED);
+                                vs.setJavaVersion(jre.getVersion());
                                 vs.setDefaultJavaPath(jre.getBinary().toString());
                             }));
                         }

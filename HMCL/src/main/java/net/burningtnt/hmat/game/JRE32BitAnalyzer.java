@@ -66,6 +66,7 @@ public class JRE32BitAnalyzer implements Analyzer<LogAnalyzable> {
                 }).thenAcceptAsync(Schedulers.javafx(), jre -> {
                     VersionSetting vs = input.getRepository().getVersionSetting(input.getVersion().getId());
                     vs.setJavaVersionType(JavaVersionType.DETECTED);
+                    vs.setJavaVersion(jre.getVersion());
                     vs.setDefaultJavaPath(jre.getBinary().toString());
                 }));
             }
