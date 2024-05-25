@@ -22,6 +22,7 @@ import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.ui.Controllers;
 import org.jackhuang.hmcl.ui.FXUtils;
+import org.jackhuang.hmcl.ui.ImageViewStage;
 import org.jackhuang.hmcl.util.Pair;
 
 import java.util.ArrayList;
@@ -158,6 +159,7 @@ public final class HMCLSolverPane<T> extends StackPane {
                     view.setPreserveRatio(true);
                     view.fitWidthProperty().bind(pane.widthProperty());
                     view.fitHeightProperty().bind(pane.heightProperty());
+                    view.setOnMouseClicked(e -> new ImageViewStage(view.getImage()));
                     pane.getChildren().setAll(view);
 
                     pane.setAlignment(Pos.CENTER_LEFT);
