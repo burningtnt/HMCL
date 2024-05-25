@@ -9,7 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 public class ImageViewStage extends Stage {
-    private final ObjectProperty<Image> imageProperty = new SimpleObjectProperty<Image>();
+    private final ObjectProperty<Image> imageProperty = new SimpleObjectProperty<>();
 
     public ImageViewStage(Image image) {
         this();
