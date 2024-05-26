@@ -10,7 +10,6 @@ import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.logging.Logger;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
-import org.jackhuang.hmcl.util.platform.win.RegistryUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,21 +38,6 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
         for (String key : KEYS) {
             for (String log : logs) {
                 if (log.contains(key)) {
-                    RegistryUtils.QueryResult result = RegistryUtils.query(
-                            RegistryUtils.Type.CURRENT_USER,
-                            "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage", "ACP"
-                    ).run();
-                    if (result == null) {
-                        result = RegistryUtils.query(
-                                RegistryUtils.Type.LOCAL_MACHINE,
-                                "SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage", "ACP"
-                        ).run();
-                    }
-
-                    if (result == null || ("REG_SZ".equals(result.getType()) && "936".equals(result.getValue()))) {
-                        return ControlFlow.CONTINUE;
-                    }
-
                     results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_CODE_PAGE, new Solver() {
                         private int BTN_OPEN_INTL = -1;
 

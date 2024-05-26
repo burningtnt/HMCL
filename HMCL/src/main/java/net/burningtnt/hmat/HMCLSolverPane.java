@@ -65,8 +65,7 @@ public final class HMCLSolverPane<T> extends StackPane {
         VBox.setVgrow(solverContainer, Priority.ALWAYS);
         solverContainer.setPadding(new Insets(0, 0, 0, 8));
         if (!results.hasNext()) {
-            solverContainer.getChildren().setAll(new Label(i18n("message.error")));
-            state.set(STATE_FINISHED);
+            throw new IllegalStateException("No AnalyzeResult.");
         } else {
             controller.transferTo(null);
         }
