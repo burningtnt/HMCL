@@ -35,44 +35,40 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
             return ControlFlow.CONTINUE;
         }
 
-        for (String key : KEYS) {
-            for (String log : logs) {
-                if (log.contains(key)) {
-                    results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_CODE_PAGE, new Solver() {
-                        private int BTN_OPEN_INTL = -1;
+        if (StringUtils.containsOne(logs, KEYS)) {
+            results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_CODE_PAGE, new Solver() {
+                private int BTN_OPEN_INTL = -1;
 
-                        private int BTN_REBOOT_COMPUTER = -1;
+                private int BTN_REBOOT_COMPUTER = -1;
 
-                        @Override
-                        public void configure(SolverConfigurator configurator) {
-                            configurator.setDescription(i18n("analyzer.result.log_game_code_page.steps.1"));
-                            configurator.setImage(FXUtils.newBuiltinImage("/assets/img/hmat/log/game/code_page/step_1.png"));
+                @Override
+                public void configure(SolverConfigurator configurator) {
+                    configurator.setDescription(i18n("analyzer.result.log_game_code_page.steps.1"));
+                    configurator.setImage(FXUtils.newBuiltinImage("/assets/img/hmat/log/game/code_page/step_1.png"));
 
-                            BTN_OPEN_INTL = configurator.putButton(i18n("analyzer.result.log_game_code_page.button.open_intl"));
-                            BTN_REBOOT_COMPUTER = configurator.putButton(i18n("analyzer.result.log_game_code_page.button.reboot_computer"));
-                        }
-
-                        @Override
-                        public void callbackSelection(SolverConfigurator configurator, int selectionID) {
-                            if (selectionID == BTN_OPEN_INTL) {
-                                try {
-                                    Runtime.getRuntime().exec(new String[]{
-                                            "rundll32.exe",
-                                            "shell32.dll,Control_RunDLL",
-                                            "intl.cpl"
-                                    });
-                                } catch (IOException e) {
-                                    Logger.LOG.warning("Cannot open intl.", e);
-                                }
-                            } else if (selectionID == BTN_NEXT || selectionID == BTN_REBOOT_COMPUTER) {
-                                Launcher.rebootComputer();
-                            }
-                        }
-                    }));
-
-                    return ControlFlow.BREAK_OTHER;
+                    BTN_OPEN_INTL = configurator.putButton(i18n("analyzer.result.log_game_code_page.button.open_intl"));
+                    BTN_REBOOT_COMPUTER = configurator.putButton(i18n("analyzer.result.log_game_code_page.button.reboot_computer"));
                 }
-            }
+
+                @Override
+                public void callbackSelection(SolverConfigurator configurator, int selectionID) {
+                    if (selectionID == BTN_OPEN_INTL) {
+                        try {
+                            Runtime.getRuntime().exec(new String[]{
+                                    "rundll32.exe",
+                                    "shell32.dll,Control_RunDLL",
+                                    "intl.cpl"
+                            });
+                        } catch (IOException e) {
+                            Logger.LOG.warning("Cannot open intl.", e);
+                        }
+                    } else if (selectionID == BTN_NEXT || selectionID == BTN_REBOOT_COMPUTER) {
+                        Launcher.rebootComputer();
+                    }
+                }
+            }));
+
+            return ControlFlow.BREAK_OTHER;
         }
 
         return ControlFlow.CONTINUE;
