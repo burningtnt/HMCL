@@ -14,7 +14,7 @@ HMCL 是一款跨平台 Minecraft 启动器，支持 Mod 管理、游戏自定�
 
 HMCL 有着强大的跨平台能力。它不仅支持 Windows、Linux、macOS 等常见的操作系统，同时也支持 x86、ARM、MIPS 和 LoongArch 等不同的 CPU 架构。您可以使用 HMCL 在不同平台上轻松地游玩 Minecraft。
 
-如果您想要了解 HMCL 对不同平台的支持程度，请参见[此表格](PLATFORM_cn.md)。
+如果您想要了解 HMCL 对不同平台的支持程度，请参见 [此表格](PLATFORM_cn.md)。
 
 ## 下载
 
@@ -32,7 +32,7 @@ HMCL 有着强大的跨平台能力。它不仅支持 Windows、Linux、macOS �
 
 1. 当您分发该程序的修改版本时，您必须以一种合理的方式修改该程序的名称或版本号，以示其与原始版本不同。(依据 [GPLv3, 7(c)](https://github.com/HMCL-dev/HMCL/blob/11820e31a85d8989e41d97476712b07e7094b190/LICENSE#L372-L374))
 
-   该程序的名称及版本号可在[此处](https://github.com/HMCL-dev/HMCL/blob/javafx/HMCL/src/main/java/org/jackhuang/hmcl/Metadata.java#L33-L35)修改。
+   该程序的名称及版本号可在 [此处](https://github.com/HMCL-dev/HMCL/blob/javafx/HMCL/src/main/java/org/jackhuang/hmcl/Metadata.java#L33-L35) 修改。
 
 2. 您不得移除该程序所显示的版权声明。(依据 [GPLv3, 7(b)](https://github.com/HMCL-dev/HMCL/blob/11820e31a85d8989e41d97476712b07e7094b190/LICENSE#L368-L370))
 
