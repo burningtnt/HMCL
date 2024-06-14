@@ -32,7 +32,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import org.jackhuang.hmcl.game.GameDirectoryType;
 import org.jackhuang.hmcl.game.HMCLGameRepository;
@@ -647,17 +646,17 @@ public final class VersionSettingsPage extends StackPane implements DecoratorPag
         }
 
         Task.composeAsync(Schedulers.javafx(), () -> {
-                    if (versionId == null) {
-                        return versionSetting.getJavaVersion(GameVersionNumber.unknown(), null);
-                    } else {
-                        return versionSetting.getJavaVersion(
-                                GameVersionNumber.asGameVersion(profile.getRepository().getGameVersion(versionId)),
-                                profile.getRepository().getVersion(versionId));
-                    }
-                }).thenAcceptAsync(Schedulers.javafx(), javaVersion -> javaSublist.setSubtitle(Optional.ofNullable(javaVersion)
-                        .map(JavaVersion::getBinary).map(Path::toString).orElseGet(() ->
-                                autoSelected ? i18n("settings.game.java_directory.auto.not_found") : i18n("settings.game.java_directory.invalid"))))
-                .start();
+            if (versionId == null) {
+                return versionSetting.getJavaVersion(GameVersionNumber.unknown(), null);
+            } else {
+                return versionSetting.getJavaVersion(
+                        GameVersionNumber.asGameVersion(profile.getRepository().getGameVersion(versionId)),
+                        profile.getRepository().getVersion(versionId));
+            }
+        }).thenAcceptAsync(Schedulers.javafx(), javaVersion -> javaSublist.setSubtitle(Optional.ofNullable(javaVersion)
+                .map(JavaVersion::getBinary).map(Path::toString).orElseGet(() ->
+                        autoSelected ? i18n("settings.game.java_directory.auto.not_found") : i18n("settings.game.java_directory.invalid")))
+        ).start();
     }
 
     private void editSpecificSettings() {
