@@ -35,6 +35,7 @@ import javafx.stage.FileChooser;
 import org.jackhuang.hmcl.game.GameDirectoryType;
 import org.jackhuang.hmcl.game.HMCLGameRepository;
 import org.jackhuang.hmcl.game.ProcessPriority;
+import org.jackhuang.hmcl.game.Version;
 import org.jackhuang.hmcl.java.JavaManager;
 import org.jackhuang.hmcl.setting.*;
 import org.jackhuang.hmcl.ui.Controllers;
