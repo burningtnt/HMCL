@@ -288,7 +288,7 @@ public final class Launcher extends Application {
             Launcher.stopApplication();
             Lang.thread(() -> {
                 try {
-                    Thread.sleep(800);
+                    Thread.sleep(4000);
                     Runtime.getRuntime().exec(new String[]{"shutdown", "/sg", "/d", "4:1"});
                 } catch (IOException | InterruptedException e) {
                     Logger.LOG.warning("Cannot reboot this computer.", e);
