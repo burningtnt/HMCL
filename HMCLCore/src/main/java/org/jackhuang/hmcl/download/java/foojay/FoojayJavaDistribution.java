@@ -15,33 +15,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.jackhuang.hmcl.download.java.disco;
+package org.jackhuang.hmcl.download.java.foojay;
 
-public enum DiscoJavaDistribution {
-    ADOPTIUM("Adoptium", true, false),
-    LIBERICA("Liberica", true, true),
-    GRAALVM("Oracle GraalVM", false, false);
+import org.jackhuang.hmcl.download.java.JavaDistribution;
 
-    private final String displayString;
+public enum FoojayJavaDistribution implements JavaDistribution {
+    ADOPTIUM("Adoptium", true),
+    LIBERICA("Liberica", true),
+    GRAALVM("Oracle GraalVM", false);
+
+    private final String displayName;
     private final boolean jreSupported;
-    private final boolean bundleJavaFXSupported;
 
-    DiscoJavaDistribution(String displayString, boolean jreSupported, boolean bundleJavaFXSupported) {
-        this.displayString = displayString;
+    FoojayJavaDistribution(String displayName, boolean jreSupported) {
+        this.displayName = displayName;
         this.jreSupported = jreSupported;
-        this.bundleJavaFXSupported = bundleJavaFXSupported;
     }
 
-    public String getDisplayString() {
-        return displayString;
+    @Override
+    public String getDisplayName() {
+        return displayName;
     }
-
 
     public boolean isJreSupported() {
         return jreSupported;
-    }
-
-    public boolean isBundleJavaFXSupported() {
-        return bundleJavaFXSupported;
     }
 }
