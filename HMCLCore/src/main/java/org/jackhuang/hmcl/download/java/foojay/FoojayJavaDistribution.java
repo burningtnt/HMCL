@@ -19,6 +19,9 @@ package org.jackhuang.hmcl.download.java.foojay;
 
 import org.jackhuang.hmcl.download.java.JavaDistribution;
 
+/**
+ * @author Glavo
+ */
 public enum FoojayJavaDistribution implements JavaDistribution {
     ADOPTIUM("Adoptium", true),
     LIBERICA("Liberica", true),

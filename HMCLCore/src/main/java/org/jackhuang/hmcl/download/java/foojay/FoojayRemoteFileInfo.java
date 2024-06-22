@@ -19,6 +19,9 @@ package org.jackhuang.hmcl.download.java.foojay;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * @author Glavo
+ */
 public final class FoojayRemoteFileInfo {
     @SerializedName("filename")
     private final String filename;
