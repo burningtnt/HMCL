@@ -15,32 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.jackhuang.hmcl.download.java.foojay;
+package org.jackhuang.hmcl.download.java.disco;
 
-import org.jackhuang.hmcl.download.java.JavaDistribution;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * @author Glavo
  */
-public enum FoojayJavaDistribution implements JavaDistribution {
-    ADOPTIUM("Adoptium", true),
-    LIBERICA("Liberica", true),
-    GRAALVM("Oracle GraalVM", false);
+public final class DiscoRemoteFileInfo {
+    @SerializedName("filename")
+    private final String filename;
 
-    private final String displayName;
-    private final boolean jreSupported;
+    @SerializedName("checksum_type")
+    private final String checksumType;
 
-    FoojayJavaDistribution(String displayName, boolean jreSupported) {
-        this.displayName = displayName;
-        this.jreSupported = jreSupported;
-    }
+    @SerializedName("checksum")
+    private final String checksum;
 
-    @Override
-    public String getDisplayName() {
-        return displayName;
-    }
+    @SerializedName("checksum_uri")
+    private final String checksumUri;
 
-    public boolean isJreSupported() {
-        return jreSupported;
+    public DiscoRemoteFileInfo(String filename, String checksumType, String checksum, String checksumUri) {
+        this.filename = filename;
+        this.checksumType = checksumType;
+        this.checksum = checksum;
+        this.checksumUri = checksumUri;
     }
 }

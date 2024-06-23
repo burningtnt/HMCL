@@ -15,22 +15,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.jackhuang.hmcl.download.java.foojay;
+package org.jackhuang.hmcl.download.java.disco;
 
+import com.google.gson.reflect.TypeToken;
 import org.jackhuang.hmcl.download.DownloadProvider;
 import org.jackhuang.hmcl.task.GetTask;
 import org.jackhuang.hmcl.task.Task;
+import org.jackhuang.hmcl.util.gson.JsonUtils;
 import org.jackhuang.hmcl.util.io.NetworkUtils;
 import org.jackhuang.hmcl.util.platform.Architecture;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
 import org.jackhuang.hmcl.util.platform.Platform;
+import org.jackhuang.hmcl.util.versioning.VersionNumber;
 
 import java.util.*;
 
 /**
  * @author Glavo
  */
-public final class FoojayFetchJavaListTask extends Task<TreeMap<Integer, FoojayRemoteVersion>> {
+public final class DiscoFetchJavaListTask extends Task<TreeMap<Integer, DiscoRemoteVersion>> {
+
+    public static final String API_ROOT = System.getProperty("hmcl.discoapi.override", "https://api.foojay.io/disco/v3.0");
+
+    private static final int LATEST_LTS = 21;
+
+    private static boolean isLTS(int major) {
+        if (major <= 8) {
+            return true;
+        }
+
+        if (major < 21) {
+            return major == 11 || major == 17;
+        }
+
+        return major % 4 == 1;
+    }
 
     private static String getOperatingSystemName(OperatingSystem os) {
         return os == OperatingSystem.OSX ? "macos" : os.getCheckedName();
@@ -40,9 +59,9 @@ public final class FoojayFetchJavaListTask extends Task<TreeMap<Integer, FoojayR
         return arch.getCheckedName();
     }
 
-    private final Task<?> dependent;
+    private final Task<String> fetchPackagesTask;
 
-    public FoojayFetchJavaListTask(DownloadProvider downloadProvider, FoojayJavaDistribution distribution, Platform platform, boolean isJRE) {
+    public DiscoFetchJavaListTask(DownloadProvider downloadProvider, DiscoJavaDistribution distribution, Platform platform, boolean isJRE) {
         HashMap<String, String> params = new HashMap<>();
         params.put("distribution", distribution.name().toLowerCase(Locale.ROOT));
         params.put("package_type", isJRE ? "jre" : "jdk");
@@ -52,16 +71,43 @@ public final class FoojayFetchJavaListTask extends Task<TreeMap<Integer, FoojayR
         params.put("archive_type", platform.getOperatingSystem() == OperatingSystem.WINDOWS ? "zip" : "tar.gz");
         params.put("directly_downloadable", "true");
 
-        this.dependent = new GetTask(downloadProvider.injectURLWithCandidates(NetworkUtils.withQuery("https://api.foojay.io/disco/v3.0/packages", params)));
+        this.fetchPackagesTask = new GetTask(downloadProvider.injectURLWithCandidates(NetworkUtils.withQuery(API_ROOT + "/packages", params)));
     }
 
     @Override
     public Collection<Task<?>> getDependents() {
-        return Collections.singleton(dependent);
+        return Collections.singleton(fetchPackagesTask);
     }
 
     @Override
     public void execute() throws Exception {
-        // TODO
+        String json = fetchPackagesTask.getResult();
+        List<DiscoRemoteVersion> result = JsonUtils.<Result<DiscoRemoteVersion>>fromNonNullJson(json, new TypeToken<Result<DiscoRemoteVersion>>() {
+        }.getType()).result;
+
+        TreeMap<Integer, DiscoRemoteVersion> map = new TreeMap<>();
+
+        for (DiscoRemoteVersion version : result) {
+            int jdkVersion = version.getJdkVersion();
+            if (isLTS(jdkVersion) || jdkVersion == 16 || jdkVersion > LATEST_LTS) {
+                DiscoRemoteVersion oldVersion = map.get(jdkVersion);
+                if (oldVersion == null || VersionNumber.compare(version.getDistributionVersion(), oldVersion.getDistributionVersion()) > 0) {
+                    map.put(jdkVersion, version);
+                }
+            }
+        }
+
+        setResult(map);
     }
+
+    private static final class Result<T> {
+        final List<T> result;
+        final String message;
+
+        private Result(List<T> result, String message) {
+            this.result = result;
+            this.message = message;
+        }
+    }
+
 }

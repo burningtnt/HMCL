@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.jackhuang.hmcl.download.java.foojay;
+package org.jackhuang.hmcl.download.java.disco;
 
 import com.google.gson.annotations.SerializedName;
 
 /**
  * @author Glavo
  */
-public final class FoojayRemoteVersion {
+public final class DiscoRemoteVersion {
     @SerializedName("id")
     private final String id;
 
@@ -34,6 +34,12 @@ public final class FoojayRemoteVersion {
 
     @SerializedName("jdk_version")
     private final int jdkVersion;
+
+    @SerializedName("java_version")
+    private final String javaVersion;
+
+    @SerializedName("distribution_version")
+    private final String distributionVersion;
 
     @SerializedName("operating_system")
     private final String operatingSystem;
@@ -50,11 +56,13 @@ public final class FoojayRemoteVersion {
     @SerializedName("links")
     private final Links links;
 
-    public FoojayRemoteVersion(String id, String archiveType, String distribution, int jdkVersion, String operatingSystem, String architecture, String packageType, boolean directlyDownloadable, Links links) {
+    public DiscoRemoteVersion(String id, String archiveType, String distribution, int jdkVersion, String javaVersion, String distributionVersion, String operatingSystem, String architecture, String packageType, boolean directlyDownloadable, Links links) {
         this.id = id;
         this.archiveType = archiveType;
         this.distribution = distribution;
         this.jdkVersion = jdkVersion;
+        this.javaVersion = javaVersion;
+        this.distributionVersion = distributionVersion;
         this.operatingSystem = operatingSystem;
         this.architecture = architecture;
         this.packageType = packageType;
@@ -76,6 +84,14 @@ public final class FoojayRemoteVersion {
 
     public int getJdkVersion() {
         return jdkVersion;
+    }
+
+    public String getJavaVersion() {
+        return javaVersion;
+    }
+
+    public String getDistributionVersion() {
+        return distributionVersion;
     }
 
     public String getOperatingSystem() {
