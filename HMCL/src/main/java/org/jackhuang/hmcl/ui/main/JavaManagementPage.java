@@ -1,6 +1,5 @@
 package org.jackhuang.hmcl.ui.main;
 
-import com.jfoenix.controls.JFXButton;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
@@ -15,6 +14,7 @@ import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.ui.*;
 import org.jackhuang.hmcl.ui.construct.MessageDialogPane;
+import org.jackhuang.hmcl.util.platform.Architecture;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
 import org.jackhuang.hmcl.util.platform.Platform;
 
@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -36,8 +35,17 @@ public final class JavaManagementPage extends ListPageBase<JavaItem> {
     @SuppressWarnings("FieldCanBeLocal")
     private final ChangeListener<Collection<JavaRuntime>> listener;
 
+    private final Runnable onInstallJava;
+
     public JavaManagementPage() {
         this.listener = FXUtils.onWeakChangeAndOperate(JavaManager.getAllJavaProperty(), this::loadJava);
+
+        if (Platform.SYSTEM_PLATFORM.equals(OperatingSystem.LINUX, Architecture.LOONGARCH64_OW)) {
+            //noinspection HttpUrlsUsage
+            onInstallJava = () -> FXUtils.openLink("http://www.loongnix.cn/zh/api/java/");
+        } else {
+            onInstallJava = () -> Controllers.dialog(new JavaDownloadDialog(DownloadProviders.getDownloadProvider(), GameJavaVersion.getSupportedVersions(Platform.SYSTEM_PLATFORM)));
+        }
     }
 
     @Override
@@ -72,10 +80,6 @@ public final class JavaManagementPage extends ListPageBase<JavaItem> {
         }
     }
 
-    public void onInstallJava() {
-        Controllers.dialog(new JavaDownloadDialog(DownloadProviders.getDownloadProvider(), GameJavaVersion.getSupportedVersions(Platform.SYSTEM_PLATFORM)));
-    }
-
     // FXThread
     private void loadJava(Collection<JavaRuntime> javaRuntimes) {
         if (javaRuntimes != null) {
@@ -97,13 +101,14 @@ public final class JavaManagementPage extends ListPageBase<JavaItem> {
 
         @Override
         protected List<Node> initializeToolbar(JavaManagementPage skinnable) {
-            JFXButton refreshButton = createToolbarButton2(i18n("button.refresh"), SVG.REFRESH, JavaManager::refresh);
-            JFXButton downloadButton = createToolbarButton2(i18n("java.download"), SVG.DOWNLOAD_OUTLINE, skinnable::onInstallJava);
-            if (GameJavaVersion.getSupportedVersions(Platform.SYSTEM_PLATFORM).isEmpty())
-                downloadButton.setDisable(true);
-            JFXButton addJavaButton = createToolbarButton2(i18n("java.add"), SVG.PLUS, skinnable::onAddJava);
+            ArrayList<Node> res = new ArrayList<>(4);
 
-            return Arrays.asList(refreshButton, downloadButton, addJavaButton);
+            res.add(createToolbarButton2(i18n("button.refresh"), SVG.REFRESH, JavaManager::refresh));
+            if (skinnable.onInstallJava != null) {
+                res.add(createToolbarButton2(i18n("java.download"), SVG.DOWNLOAD_OUTLINE, skinnable.onInstallJava));
+            }
+            res.add(createToolbarButton2(i18n("java.add"), SVG.PLUS, skinnable::onAddJava));
+            return res;
         }
     }
 }

@@ -18,11 +18,12 @@
 package org.jackhuang.hmcl.download.java.disco;
 
 import com.google.gson.annotations.SerializedName;
+import org.jackhuang.hmcl.download.java.JavaRemoteVersion;
 
 /**
  * @author Glavo
  */
-public final class DiscoRemoteVersion {
+public final class DiscoRemoteVersion implements JavaRemoteVersion {
     @SerializedName("id")
     private final String id;
 
@@ -82,10 +83,12 @@ public final class DiscoRemoteVersion {
         return distribution;
     }
 
+    @Override
     public int getJdkVersion() {
         return jdkVersion;
     }
 
+    @Override
     public String getJavaVersion() {
         return javaVersion;
     }

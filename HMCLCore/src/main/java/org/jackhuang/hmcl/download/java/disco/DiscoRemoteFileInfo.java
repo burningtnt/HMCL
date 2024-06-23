@@ -41,4 +41,20 @@ public final class DiscoRemoteFileInfo {
         this.checksum = checksum;
         this.checksumUri = checksumUri;
     }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public String getChecksumType() {
+        return checksumType;
+    }
+
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public String getChecksumUri() {
+        return checksumUri;
+    }
 }

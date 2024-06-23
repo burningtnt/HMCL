@@ -20,7 +20,8 @@ package org.jackhuang.hmcl.download.java;
 /**
  * @author Glavo
  */
-public interface JavaDistribution {
-    String getDisplayName();
+public interface JavaRemoteVersion {
+    int getJdkVersion();
 
+    String getJavaVersion();
 }
