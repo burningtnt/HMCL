@@ -15,11 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.jackhuang.hmcl.download.java;
+package org.jackhuang.hmcl.ui.main;
+
+import org.jackhuang.hmcl.ui.construct.DialogPane;
 
 /**
  * @author Glavo
  */
-public interface JavaDistribution {
-    String getDisplayName();
+public final class NewJavaDownloadDialog extends DialogPane {
+    // TODO
 }
