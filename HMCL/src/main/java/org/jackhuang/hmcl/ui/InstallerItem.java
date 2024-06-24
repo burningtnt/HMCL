@@ -191,14 +191,6 @@ public class InstallerItem extends Control {
 
     public final static class InstallerItemGroup {
         private final InstallerItem game;
-        private final InstallerItem fabric;
-        private final InstallerItem fabricApi;
-        private final InstallerItem forge;
-        private final InstallerItem neoForge;
-        private final InstallerItem liteLoader;
-        private final InstallerItem optiFine;
-        private final InstallerItem quilt;
-        private final InstallerItem quiltApi;
 
         private final InstallerItem[] libraries;
 
@@ -228,14 +220,14 @@ public class InstallerItem extends Control {
 
         public InstallerItemGroup(String gameVersion, Style style) {
             game = new InstallerItem(MINECRAFT, style);
-            fabric = new InstallerItem(FABRIC, style);
-            fabricApi = new InstallerItem(FABRIC_API, style);
-            forge = new InstallerItem(FORGE, style);
-            neoForge = new InstallerItem(NEO_FORGE, style);
-            liteLoader = new InstallerItem(LITELOADER, style);
-            optiFine = new InstallerItem(OPTIFINE, style);
-            quilt = new InstallerItem(QUILT, style);
-            quiltApi = new InstallerItem(QUILT_API, style);
+            InstallerItem fabric = new InstallerItem(FABRIC, style);
+            InstallerItem fabricApi = new InstallerItem(FABRIC_API, style);
+            InstallerItem forge = new InstallerItem(FORGE, style);
+            InstallerItem neoForge = new InstallerItem(NEO_FORGE, style);
+            InstallerItem liteLoader = new InstallerItem(LITELOADER, style);
+            InstallerItem optiFine = new InstallerItem(OPTIFINE, style);
+            InstallerItem quilt = new InstallerItem(QUILT, style);
+            InstallerItem quiltApi = new InstallerItem(QUILT_API, style);
 
             Map<InstallerItem, Set<InstallerItem>> incompatibleMap = new HashMap<>();
             mutualIncompatible(incompatibleMap, forge, fabric, quilt, neoForge, liteLoader);
@@ -292,6 +284,10 @@ public class InstallerItem extends Control {
             }
         }
 
+        public InstallerItem getGame() {
+            return game;
+        }
+
         public InstallerItem[] getLibraries() {
             return libraries;
         }
@@ -300,6 +296,7 @@ public class InstallerItem extends Control {
     public static class InstallerItemSkin extends SkinBase<InstallerItem> {
         private static final PseudoClass LIST_ITEM = PseudoClass.getPseudoClass("list-item");
         private static final PseudoClass CARD = PseudoClass.getPseudoClass("card");
+        private static final WeakListenerHolder holder = new WeakListenerHolder();
 
         InstallerItemSkin(InstallerItem control) {
             super(control);
@@ -307,6 +304,7 @@ public class InstallerItem extends Control {
             Pane pane;
             if (control.style == Style.CARD) {
                 pane = new VBox();
+                holder.add(FXUtils.onWeakChangeAndOperate(pane.widthProperty(), v -> FXUtils.setLimitHeight(pane, v.doubleValue() * 0.7)));
             } else {
                 pane = new HBox();
             }

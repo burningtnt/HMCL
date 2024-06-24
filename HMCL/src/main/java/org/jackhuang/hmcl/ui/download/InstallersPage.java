@@ -71,7 +71,7 @@ public class InstallersPage extends Control implements WizardPage {
                     Controllers.dialog(i18n("install.installer.fabric-api.warning"), i18n("message.warning"), MessageDialogPane.MessageType.WARNING);
                 }
 
-                if (library.resolvedStatePropery().get() instanceof InstallerItem.InstallableState)
+                if (!(library.resolvedStatePropery().get() instanceof InstallerItem.IncompatibleState))
                     controller.onNext(new VersionsPage(controller, i18n("install.installer.choose", i18n("install.installer." + libraryId)), gameVersion, downloadProvider, libraryId, () -> controller.onPrev(false)));
             });
             library.removeActionProperty().set(e -> {
@@ -87,7 +87,7 @@ public class InstallersPage extends Control implements WizardPage {
 
     @Override
     public String getTitle() {
-        return i18n("game.version");
+        return group.getGame().versionProperty().get().getVersion();
     }
 
     private String getVersion(String id) {
@@ -144,7 +144,7 @@ public class InstallersPage extends Control implements WizardPage {
                 versionNamePane.setAlignment(Pos.CENTER_LEFT);
 
                 control.txtName.setMaxWidth(300);
-                versionNamePane.getChildren().setAll(new Label(i18n("archive.name")), control.txtName);
+                versionNamePane.getChildren().setAll(new Label(i18n("version.name")), control.txtName);
                 root.setTop(versionNamePane);
             }
 
