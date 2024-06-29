@@ -2,8 +2,8 @@ package org.jackhuang.hmcl.java;
 
 import org.jackhuang.hmcl.download.ArtifactMalformedException;
 import org.jackhuang.hmcl.download.DownloadProvider;
-import org.jackhuang.hmcl.download.java.JavaDownloadTask;
-import org.jackhuang.hmcl.download.java.RemoteFiles;
+import org.jackhuang.hmcl.download.java.mojang.MojangJavaDownloadTask;
+import org.jackhuang.hmcl.download.java.mojang.MojangJavaRemoteFiles;
 import org.jackhuang.hmcl.game.DownloadInfo;
 import org.jackhuang.hmcl.game.GameJavaVersion;
 import org.jackhuang.hmcl.task.Task;
@@ -89,7 +89,7 @@ public final class HMCLJavaRepository implements JavaRepository {
     public Task<JavaRuntime> getInstallJavaTask(DownloadProvider downloadProvider, Platform platform, GameJavaVersion gameJavaVersion) {
         Path javaDir = getJavaDir(platform, gameJavaVersion.getComponent());
 
-        return new JavaDownloadTask(downloadProvider, javaDir, gameJavaVersion, JavaManager.getJavaPlatform(platform))
+        return new MojangJavaDownloadTask(downloadProvider, javaDir, gameJavaVersion, JavaManager.getJavaPlatform(platform))
                 .thenApplyAsync(result -> {
                     Path executable;
                     try {
@@ -115,15 +115,15 @@ public final class HMCLJavaRepository implements JavaRepository {
 
                     Map<String, JavaLocalFiles.Local> files = new LinkedHashMap<>();
                     result.remoteFiles.getFiles().forEach((path, file) -> {
-                        if (file instanceof RemoteFiles.RemoteFile) {
-                            DownloadInfo downloadInfo = ((RemoteFiles.RemoteFile) file).getDownloads().get("raw");
+                        if (file instanceof MojangJavaRemoteFiles.RemoteFile) {
+                            DownloadInfo downloadInfo = ((MojangJavaRemoteFiles.RemoteFile) file).getDownloads().get("raw");
                             if (downloadInfo != null) {
                                 files.put(path, new JavaLocalFiles.LocalFile(downloadInfo.getSha1(), downloadInfo.getSize()));
                             }
-                        } else if (file instanceof RemoteFiles.RemoteDirectory) {
+                        } else if (file instanceof MojangJavaRemoteFiles.RemoteDirectory) {
                             files.put(path, new JavaLocalFiles.LocalDirectory());
-                        } else if (file instanceof RemoteFiles.RemoteLink) {
-                            files.put(path, new JavaLocalFiles.LocalLink(((RemoteFiles.RemoteLink) file).getTarget()));
+                        } else if (file instanceof MojangJavaRemoteFiles.RemoteLink) {
+                            files.put(path, new JavaLocalFiles.LocalLink(((MojangJavaRemoteFiles.RemoteLink) file).getTarget()));
                         }
                     });
 
