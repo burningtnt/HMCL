@@ -79,6 +79,10 @@ public final class Platform {
         return Objects.hash(os, arch);
     }
 
+    public boolean equals(OperatingSystem os, Architecture arch) {
+        return this.os == os && this.arch == arch;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
