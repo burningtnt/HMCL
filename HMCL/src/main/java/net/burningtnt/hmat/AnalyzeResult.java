@@ -31,6 +31,7 @@ public final class AnalyzeResult<T> {
         LOG_GAME_CODE_PAGE,
         LOG_GAME_VIRTUAL_MEMORY,
         LOG_GAME_JRE_32BIT,
+        LOG_GAME_JRE_INVALID,
         LOG_GAME_JRE_VERSION
     }
 }

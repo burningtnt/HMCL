@@ -10,6 +10,7 @@ import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.util.StringUtils;
 import org.jackhuang.hmcl.util.logging.Logger;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
+import org.jackhuang.hmcl.util.versioning.VersionNumber;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,6 +37,11 @@ public class CodePageAnalyzer implements Analyzer<LogAnalyzable> {
         }
 
         if (StringUtils.containsOne(logs, KEYS)) {
+            // Oracle Java 8u411 has an unfixable bug.
+            if ("oracle".equalsIgnoreCase(input.getLaunchOptions().getJava().getVendor()) && VersionNumber.asVersion("1.8.0_411").equals(input.getLaunchOptions().getJava().getVersionNumber())) {
+                results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_JRE_INVALID, Solver.ofUninstallJRE(input)));
+            }
+
             results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_CODE_PAGE, new Solver() {
                 private int BTN_OPEN_INTL = -1;
 

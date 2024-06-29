@@ -4,7 +4,6 @@ import net.burningtnt.hmat.AnalyzeResult;
 import net.burningtnt.hmat.Analyzer;
 import net.burningtnt.hmat.LogAnalyzable;
 import net.burningtnt.hmat.solver.Solver;
-import net.burningtnt.hmat.solver.SolverConfigurator;
 import org.jackhuang.hmcl.game.GameJavaVersion;
 import org.jackhuang.hmcl.java.JavaManager;
 import org.jackhuang.hmcl.java.JavaRuntime;
@@ -75,30 +74,21 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                         continue;
                     }
 
-                    results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_JRE_VERSION, new Solver() {
-                        @Override
-                        public void configure(SolverConfigurator configurator) {
-                            configurator.bindTask(Task.composeAsync(() -> {
-                                int majorVersion = javaVersion.getMajorVersion();
-                                for (JavaRuntime jre : JavaManager.getAllJava()) {
-                                    if (jre.getParsedVersion() == majorVersion) {
-                                        return Task.supplyAsync(() -> jre);
-                                    }
-                                }
-                                return JavaManager.installJava(DownloadProviders.getDownloadProvider(), Platform.CURRENT_PLATFORM, javaVersion);
-                            }).thenAcceptAsync(Schedulers.javafx(), jre -> {
-                                VersionSetting vs = input.getRepository().getVersionSetting(input.getVersion().getId());
-                                vs.setJavaVersionType(JavaVersionType.DETECTED);
-                                vs.setJavaVersion(jre.getVersion());
-                                vs.setDefaultJavaPath(jre.getBinary().toString());
-                            }));
+                    results.add(new AnalyzeResult<>(this, AnalyzeResult.ResultID.LOG_GAME_JRE_VERSION, Solver.ofTask(Task.composeAsync(() -> {
+                        int majorVersion = javaVersion.getMajorVersion();
+                        for (JavaRuntime jre : JavaManager.getAllJava()) {
+                            if (jre.getParsedVersion() == majorVersion) {
+                                return Task.supplyAsync(() -> jre);
+                            }
                         }
+                        return JavaManager.installJava(DownloadProviders.getDownloadProvider(), Platform.CURRENT_PLATFORM, javaVersion);
+                    }).thenAcceptAsync(Schedulers.javafx(), jre -> {
+                        VersionSetting vs = input.getRepository().getVersionSetting(input.getVersion().getId());
+                        vs.setJavaVersionType(JavaVersionType.DETECTED);
+                        vs.setJavaVersion(jre.getVersion());
+                        vs.setDefaultJavaPath(jre.getBinary().toString());
+                    }))));
 
-                        @Override
-                        public void callbackSelection(SolverConfigurator configurator, int selectionID) {
-                            configurator.transferTo(null);
-                        }
-                    }));
                     return ControlFlow.BREAK_OTHER;
                 }
             }
