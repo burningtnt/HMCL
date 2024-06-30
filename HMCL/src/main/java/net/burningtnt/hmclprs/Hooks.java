@@ -9,6 +9,9 @@ public final class Hooks {
     private Hooks() {
     }
 
+    @EntryPoint.Final
+    private static volatile String defaultVersion;
+
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
     public static void onApplicationLaunch() {
         if ("ignore".equals(System.getenv("HMCL_PR_WARNING")) || "ignore".equals(System.getProperty("hmcl.pr.warning"))) {
@@ -33,13 +36,14 @@ public final class Hooks {
     }
 
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
-    public static String onInitApplicationVersion(String version) {
-        return version + " (PR Collection)";
+    public static String onInitApplicationVersion(String defaultVersion) {
+        Hooks.defaultVersion = defaultVersion;
+        return defaultVersion + " (PR Collection)";
     }
 
     @EntryPoint(EntryPoint.LifeCycle.RUNTIME)
     public static String onGetApplicationRawVersion(String version) {
-        return version.endsWith(" (PR Collection)") ? version.substring(0, version.length() - " (PR Collection)".length()) : version;
+        return defaultVersion;
     }
 
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
