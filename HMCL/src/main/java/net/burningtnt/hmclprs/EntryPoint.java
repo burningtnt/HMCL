@@ -25,4 +25,12 @@ public @interface EntryPoint {
     @Retention(RetentionPolicy.CLASS)
     @interface Container {
     }
+
+    /**
+     * This field should ONLY be set once when initializing the application.
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.CLASS)
+    @interface Final {
+    }
 }
