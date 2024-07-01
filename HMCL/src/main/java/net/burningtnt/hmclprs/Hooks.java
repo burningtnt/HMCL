@@ -42,7 +42,7 @@ public final class Hooks {
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
     public static String onInitApplicationVersion(String defaultVersion) {
         Hooks.defaultVersion = defaultVersion;
-        return defaultVersion + Hooks.PR_COLLECTION_SUFFIX;
+        return defaultVersion + PR_COLLECTION_SUFFIX;
     }
 
     @EntryPoint(EntryPoint.LifeCycle.RUNTIME)
