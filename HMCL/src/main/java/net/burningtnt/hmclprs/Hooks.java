@@ -9,6 +9,10 @@ public final class Hooks {
     private Hooks() {
     }
 
+    private static final String PR_COLLECTION_SUFFIX = " (PR Collection)";
+
+    private static final String UPDATE_LINK = "https://hmcl-snapshot-update-73w.pages.dev/redirect/v1/type/pr-collection";
+
     @EntryPoint.Final
     private static volatile String defaultVersion;
 
@@ -27,18 +31,18 @@ public final class Hooks {
 
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
     public static String onInitApplicationName(String name) {
-        return name + " (PR Collection)";
+        return name + PR_COLLECTION_SUFFIX;
     }
 
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
     public static String onInitApplicationFullName(String fullName) {
-        return fullName + " (PR Collection)";
+        return fullName + PR_COLLECTION_SUFFIX;
     }
 
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
     public static String onInitApplicationVersion(String defaultVersion) {
         Hooks.defaultVersion = defaultVersion;
-        return defaultVersion + " (PR Collection)";
+        return defaultVersion + Hooks.PR_COLLECTION_SUFFIX;
     }
 
     @EntryPoint(EntryPoint.LifeCycle.RUNTIME)
@@ -48,7 +52,7 @@ public final class Hooks {
 
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
     public static String onInitApplicationDefaultUpdateLink(String url) {
-        return "https://hmcl-snapshot-update-73w.pages.dev/redirect/v1/type/pr-collection";
+        return UPDATE_LINK;
     }
 
     @EntryPoint(EntryPoint.LifeCycle.RUNTIME)
