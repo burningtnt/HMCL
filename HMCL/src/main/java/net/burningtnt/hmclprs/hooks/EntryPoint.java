@@ -1,4 +1,4 @@
-package net.burningtnt.hmclprs;
+package net.burningtnt.hmclprs.hooks;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
 public @interface EntryPoint {
-    LifeCycle[] value();
+    LifeCycle value();
 
     enum LifeCycle {
         /**
@@ -19,18 +19,5 @@ public @interface EntryPoint {
          * Invoked after Application launches. All packages from HMCL project is available.
          */
         RUNTIME
-    }
-
-    @Target(ElementType.TYPE)
-    @Retention(RetentionPolicy.CLASS)
-    @interface Container {
-    }
-
-    /**
-     * This field should ONLY be set once when initializing the application.
-     */
-    @Target(ElementType.FIELD)
-    @Retention(RetentionPolicy.CLASS)
-    @interface Final {
     }
 }
