@@ -1,19 +1,23 @@
 package net.burningtnt.hmclprs;
 
+import net.burningtnt.hmclprs.hooks.HookContainer;
+import net.burningtnt.hmclprs.hooks.EntryPoint;
+import net.burningtnt.hmclprs.hooks.Final;
+
 import javax.swing.*;
 
 import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
 
-@EntryPoint.Container
-public final class Hooks {
-    private Hooks() {
+@HookContainer
+public final class PRCollection {
+    private PRCollection() {
     }
 
     private static final String PR_COLLECTION_SUFFIX = " (PR Collection)";
 
     private static final String UPDATE_LINK = "https://hmcl-snapshot-update-73w.pages.dev/redirect/v1/type/pr-collection";
 
-    @EntryPoint.Final
+    @Final
     private static volatile String defaultVersion;
 
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
@@ -41,7 +45,7 @@ public final class Hooks {
 
     @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
     public static String onInitApplicationVersion(String defaultVersion) {
-        Hooks.defaultVersion = defaultVersion;
+        PRCollection.defaultVersion = defaultVersion;
         return defaultVersion + PR_COLLECTION_SUFFIX;
     }
 

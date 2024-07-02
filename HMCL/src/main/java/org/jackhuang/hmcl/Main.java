@@ -53,7 +53,7 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-        net.burningtnt.hmclprs.Hooks.onApplicationLaunch();
+        net.burningtnt.hmclprs.PRCollection.onApplicationLaunch();
 
         System.getProperties().putIfAbsent("java.net.useSystemProxies", "true");
         System.getProperties().putIfAbsent("javafx.autoproxy.disable", "true");
