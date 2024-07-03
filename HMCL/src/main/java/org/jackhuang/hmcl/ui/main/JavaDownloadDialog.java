@@ -74,7 +74,7 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
     private final JFXComboBox<JavaRemoteVersion> remoteVersionBox;
     private final JFXComboBox<JavaPackageType> packageTypeBox;
 
-    private final SpinnerPane downloadButtonPane = new SpinnerPane();
+    private final SpinnerPane remoteVersionBoxPane = new SpinnerPane();
 
     private final DownloadProvider downloadProvider = DownloadProviders.getDownloadProvider();
 
@@ -95,12 +95,12 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
         this.packageTypeBox = new JFXComboBox<>();
 
+        this.remoteVersionBoxPane.setContent(remoteVersionBox);
+
         JFXButton downloadButton = new JFXButton(i18n("download"));
         downloadButton.setOnAction(e -> onDownload());
         downloadButton.getStyleClass().add("dialog-accept");
         downloadButton.disableProperty().bind(Bindings.isNull(remoteVersionBox.getSelectionModel().selectedItemProperty()));
-        this.downloadButtonPane.getStyleClass().add("small-spinner-pane");
-        this.downloadButtonPane.setContent(downloadButton);
 
         JFXButton cancelButton = new JFXButton(i18n("button.cancel"));
         cancelButton.setOnAction(e -> fireEvent(new DialogCloseEvent()));
@@ -118,7 +118,7 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
         }
 
         setHeading(new Label(i18n("java.download")));
-        setActions(downloadButtonPane, cancelButton);
+        setActions(downloadButton, cancelButton);
 
         ChangeListener<JavaVersionList.Status> updateStatusListener = (observable, oldValue, newValue) -> updateStatus(newValue);
 
@@ -146,7 +146,7 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
                 body.getChildren().clear();
                 body.addRow(0, new Label(i18n("java.download.distribution")), distributionBox);
-                body.addRow(1, new Label(i18n("java.download.version")), remoteVersionBox);
+                body.addRow(1, new Label(i18n("java.download.version")), remoteVersionBoxPane);
                 body.addRow(2, new Label(i18n("java.download.packageType")), packageTypeBox);
             } else {
                 packageTypeBox.setItems(null);
@@ -157,7 +157,7 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
                 if (value == null) {
                     remoteVersionBox.setItems(null);
                 } else if (value instanceof MojangJavaDistribution) {
-                    body.addRow(1, new Label(i18n("java.download.version")), remoteVersionBox);
+                    body.addRow(1, new Label(i18n("java.download.version")), remoteVersionBoxPane);
 
                     ArrayList<JavaRemoteVersion> remoteVersions = new ArrayList<>();
                     for (GameJavaVersion gameJavaVersion : GameJavaVersion.getSupportedVersions(Platform.SYSTEM_PLATFORM)) {
@@ -176,20 +176,19 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
     private void updateStatus(JavaVersionList.Status status) {
         if (status == null) {
-            downloadButtonPane.hideSpinner();
+            remoteVersionBoxPane.hideSpinner();
             return;
         }
 
         switch (status) {
             case LOADING:
-                downloadButtonPane.showSpinner();
+                remoteVersionBoxPane.showSpinner();
                 break;
             case SUCCESS:
-                downloadButtonPane.hideSpinner();
+                remoteVersionBoxPane.hideSpinner();
                 break;
             case FAILED:
-                downloadButtonPane.setLoading(false);
-                downloadButtonPane.setFailedReason(i18n("java.download.load_list.failed"));
+                remoteVersionBoxPane.setFailedReason(i18n("java.download.load_list.failed"));
                 break;
         }
     }
