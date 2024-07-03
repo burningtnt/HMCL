@@ -1,3 +1,20 @@
+/*
+ * Hello Minecraft! Launcher
+ * Copyright (C) 2024 huangyuhui <huanghongxun2008@126.com> and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.jackhuang.hmcl.ui.main;
 
 import javafx.beans.value.ChangeListener;
@@ -5,11 +22,13 @@ import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.stage.FileChooser;
+import org.jackhuang.hmcl.download.java.JavaDistribution;
+import org.jackhuang.hmcl.download.java.disco.DiscoJavaDistribution;
+import org.jackhuang.hmcl.download.java.mojang.MojangJavaDistribution;
 import org.jackhuang.hmcl.game.GameJavaVersion;
 import org.jackhuang.hmcl.java.JavaManager;
 import org.jackhuang.hmcl.java.JavaRuntime;
 import org.jackhuang.hmcl.setting.ConfigHolder;
-import org.jackhuang.hmcl.setting.DownloadProviders;
 import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.ui.*;
@@ -44,7 +63,21 @@ public final class JavaManagementPage extends ListPageBase<JavaItem> {
             //noinspection HttpUrlsUsage
             onInstallJava = () -> FXUtils.openLink("http://www.loongnix.cn/zh/api/java/");
         } else {
-            onInstallJava = () -> Controllers.dialog(new JavaDownloadDialog(DownloadProviders.getDownloadProvider(), GameJavaVersion.getSupportedVersions(Platform.SYSTEM_PLATFORM)));
+            ArrayList<JavaDistribution<?>> distributions = new ArrayList<>();
+            if (GameJavaVersion.isSupportedPlatform(Platform.SYSTEM_PLATFORM)) {
+                distributions.add(MojangJavaDistribution.DISTRIBUTION);
+            }
+
+            for (DiscoJavaDistribution distribution : DiscoJavaDistribution.values()) {
+                if (distribution.isSupport(Platform.SYSTEM_PLATFORM)) {
+                    distributions.add(distribution);
+                }
+            }
+
+            if (!distributions.isEmpty())
+                onInstallJava = () -> Controllers.dialog(new JavaDownloadDialog(distributions));
+            else
+                onInstallJava = null;
         }
     }
 

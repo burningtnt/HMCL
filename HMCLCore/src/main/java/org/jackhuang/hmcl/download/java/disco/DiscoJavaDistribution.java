@@ -17,22 +17,49 @@
  */
 package org.jackhuang.hmcl.download.java.disco;
 
+import org.jackhuang.hmcl.download.DownloadProvider;
 import org.jackhuang.hmcl.download.java.JavaDistribution;
+import org.jackhuang.hmcl.download.java.JavaPackageType;
+import org.jackhuang.hmcl.task.Task;
+import org.jackhuang.hmcl.util.Lang;
+import org.jackhuang.hmcl.util.platform.Architecture;
+import org.jackhuang.hmcl.util.platform.OperatingSystem;
+import org.jackhuang.hmcl.util.platform.Platform;
+
+import java.util.*;
+
+import static org.jackhuang.hmcl.util.Pair.pair;
+import static org.jackhuang.hmcl.util.platform.Architecture.*;
+import static org.jackhuang.hmcl.util.platform.OperatingSystem.*;
 
 /**
  * @author Glavo
  */
-public enum DiscoJavaDistribution implements JavaDistribution {
-    ADOPTIUM("Adoptium", true),
-    LIBERICA("Liberica", true),
-    GRAALVM("Oracle GraalVM", false);
+public enum DiscoJavaDistribution implements JavaDistribution<DiscoJavaRemoteVersion> {
+    TEMURIN("Eclipse Temurin", "temurin", JavaPackageType.FULL, Lang.mapOf(
+            pair(WINDOWS, EnumSet.of(X86, ARM64)),
+            pair(LINUX, EnumSet.of(X86, ARM32, RISCV64, PPC64, PPC64LE, S390X, SPARCV9))
+    )),
+    LIBERICA("Liberica", "liberica", JavaPackageType.FULLFX, Lang.mapOf(
+            pair(WINDOWS, EnumSet.of(X86, ARM64)),
+            pair(LINUX, EnumSet.of(X86, ARM32, RISCV64, PPC64LE))
+    )),
+    ZULU("Zulu", "zulu", JavaPackageType.FULLFX, Lang.mapOf(
+            pair(WINDOWS, EnumSet.of(X86, ARM64)),
+            pair(LINUX, EnumSet.of(X86, ARM32, RISCV64, PPC64LE))
+    )),
+    GRAALVM("GraalVM", "graalvm", JavaPackageType.ONLY_JDK, Collections.emptyMap());
 
     private final String displayName;
-    private final boolean jreSupported;
+    private final String apiParameter;
+    private final Set<JavaPackageType> supportedPackageTypes;
+    private final Map<OperatingSystem, EnumSet<Architecture>> additionalSupportedPlatforms;
 
-    DiscoJavaDistribution(String displayName, boolean jreSupported) {
+    DiscoJavaDistribution(String displayName, String apiParameter, Set<JavaPackageType> supportedPackageTypes, Map<OperatingSystem, EnumSet<Architecture>> additionalSupportedPlatforms) {
         this.displayName = displayName;
-        this.jreSupported = jreSupported;
+        this.apiParameter = apiParameter;
+        this.supportedPackageTypes = supportedPackageTypes;
+        this.additionalSupportedPlatforms = additionalSupportedPlatforms;
     }
 
     @Override
@@ -40,7 +67,35 @@ public enum DiscoJavaDistribution implements JavaDistribution {
         return displayName;
     }
 
-    public boolean isJreSupported() {
-        return jreSupported;
+    public String getApiParameter() {
+        return apiParameter;
+    }
+
+    @Override
+    public Set<JavaPackageType> getSupportedPackageTypes() {
+        return supportedPackageTypes;
+    }
+
+    public boolean isSupport(Platform platform) {
+        OperatingSystem os = platform.getOperatingSystem();
+        Architecture arch = platform.getArchitecture();
+
+        if (arch == Architecture.X86_64) {
+            if (os == OperatingSystem.WINDOWS || os == LINUX || os == OperatingSystem.OSX) {
+                return true;
+            }
+        } else if (arch == Architecture.ARM64) {
+            if (os == LINUX || os == OperatingSystem.OSX) {
+                return true;
+            }
+        }
+
+        EnumSet<Architecture> architectures = additionalSupportedPlatforms.get(os);
+        return architectures != null && architectures.contains(arch);
+    }
+
+    @Override
+    public Task<TreeMap<Integer, DiscoJavaRemoteVersion>> getFetchJavaVersionsTask(DownloadProvider provider, Platform platform, JavaPackageType packageType) {
+        return new DiscoFetchJavaListTask(provider, this, platform, packageType);
     }
 }
