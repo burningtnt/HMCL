@@ -73,14 +73,13 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
     private final JFXComboBox<JavaDistribution<?>> distributionBox;
     private final JFXComboBox<JavaRemoteVersion> remoteVersionBox;
     private final JFXComboBox<JavaPackageType> packageTypeBox;
-
-    private final SpinnerPane remoteVersionBoxPane = new SpinnerPane();
+    private final SpinnerPane downloadButtonPane = new SpinnerPane();
 
     private final DownloadProvider downloadProvider = DownloadProviders.getDownloadProvider();
 
-    private final ObjectProperty<JavaVersionList> currentVersionList = new SimpleObjectProperty<>();
+    private final ObjectProperty<DiscoJavaVersionList> currentDiscoJavaVersionList = new SimpleObjectProperty<>();
 
-    private final Map<Pair<DiscoJavaDistribution, JavaPackageType>, JavaVersionList> javaVersionLists = new HashMap<>();
+    private final Map<Pair<DiscoJavaDistribution, JavaPackageType>, DiscoJavaVersionList> javaVersionLists = new HashMap<>();
 
     private boolean changingDistribution = false;
 
@@ -95,12 +94,11 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
         this.packageTypeBox = new JFXComboBox<>();
 
-        this.remoteVersionBoxPane.setContent(remoteVersionBox);
-
         JFXButton downloadButton = new JFXButton(i18n("download"));
         downloadButton.setOnAction(e -> onDownload());
         downloadButton.getStyleClass().add("dialog-accept");
         downloadButton.disableProperty().bind(Bindings.isNull(remoteVersionBox.getSelectionModel().selectedItemProperty()));
+        downloadButtonPane.setContent(downloadButton);
 
         JFXButton cancelButton = new JFXButton(i18n("button.cancel"));
         cancelButton.setOnAction(e -> fireEvent(new DialogCloseEvent()));
@@ -117,12 +115,8 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
             distributionBox.getSelectionModel().select(0);
         }
 
-        setHeading(new Label(i18n("java.download")));
-        setActions(downloadButton, cancelButton);
-
-        ChangeListener<JavaVersionList.Status> updateStatusListener = (observable, oldValue, newValue) -> updateStatus(newValue);
-
-        this.currentVersionList.addListener((observable, oldValue, newValue) -> {
+        ChangeListener<DiscoJavaVersionList.Status> updateStatusListener = (observable, oldValue, newValue) -> updateStatus(newValue);
+        this.currentDiscoJavaVersionList.addListener((observable, oldValue, newValue) -> {
             if (oldValue != null) {
                 oldValue.status.removeListener(updateStatusListener);
             }
@@ -146,18 +140,18 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
                 body.getChildren().clear();
                 body.addRow(0, new Label(i18n("java.download.distribution")), distributionBox);
-                body.addRow(1, new Label(i18n("java.download.version")), remoteVersionBoxPane);
+                body.addRow(1, new Label(i18n("java.download.version")), remoteVersionBox);
                 body.addRow(2, new Label(i18n("java.download.packageType")), packageTypeBox);
             } else {
                 packageTypeBox.setItems(null);
-                currentVersionList.set(null);
+                updateVersions();
 
                 body.getChildren().clear();
                 body.addRow(0, new Label(i18n("java.download.distribution")), distributionBox);
                 if (value == null) {
                     remoteVersionBox.setItems(null);
                 } else if (value instanceof MojangJavaDistribution) {
-                    body.addRow(1, new Label(i18n("java.download.version")), remoteVersionBoxPane);
+                    body.addRow(1, new Label(i18n("java.download.version")), remoteVersionBox);
 
                     ArrayList<JavaRemoteVersion> remoteVersions = new ArrayList<>();
                     for (GameJavaVersion gameJavaVersion : GameJavaVersion.getSupportedVersions(Platform.SYSTEM_PLATFORM)) {
@@ -171,24 +165,30 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
         });
 
+        setHeading(new Label(i18n("java.download")));
         setBody(body);
+        setActions(downloadButtonPane, cancelButton);
     }
 
-    private void updateStatus(JavaVersionList.Status status) {
+    private void updateStatus(DiscoJavaVersionList.Status status) {
         if (status == null) {
-            remoteVersionBoxPane.hideSpinner();
+            downloadButtonPane.hideSpinner();
+            remoteVersionBox.setDisable(false);
             return;
         }
 
         switch (status) {
             case LOADING:
-                remoteVersionBoxPane.showSpinner();
+                downloadButtonPane.showSpinner();
+                remoteVersionBox.setDisable(true);
                 break;
             case SUCCESS:
-                remoteVersionBoxPane.hideSpinner();
+                downloadButtonPane.hideSpinner();
+                remoteVersionBox.setDisable(false);
                 break;
             case FAILED:
-                remoteVersionBoxPane.setFailedReason(i18n("java.download.load_list.failed"));
+                downloadButtonPane.setFailedReason(i18n("java.download.load_list.failed"));
+                remoteVersionBox.setDisable(true);
                 break;
         }
     }
@@ -202,15 +202,15 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
         JavaDistribution<?> distribution = distributionBox.getSelectionModel().getSelectedItem();
         if (!(distribution instanceof DiscoJavaDistribution)) {
-            this.currentVersionList.set(null);
+            this.currentDiscoJavaVersionList.set(null);
             return;
         }
 
         DiscoJavaDistribution discoJavaDistribution = (DiscoJavaDistribution) distribution;
         JavaPackageType packageType = packageTypeBox.getSelectionModel().getSelectedItem();
 
-        JavaVersionList list = javaVersionLists.computeIfAbsent(Pair.pair(discoJavaDistribution, packageType), pair -> {
-            JavaVersionList res = new JavaVersionList();
+        DiscoJavaVersionList list = javaVersionLists.computeIfAbsent(Pair.pair(discoJavaDistribution, packageType), pair -> {
+            DiscoJavaVersionList res = new DiscoJavaVersionList();
             new DiscoFetchJavaListTask(downloadProvider, discoJavaDistribution, Platform.SYSTEM_PLATFORM, packageType).setExecutor(Schedulers.io()).thenApplyAsync(versions -> {
                 if (versions.isEmpty()) return Collections.<JavaRemoteVersion>emptyList();
 
@@ -232,20 +232,20 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
                 return remoteVersions;
             }).whenComplete(Schedulers.javafx(), ((result, exception) -> {
                 if (exception == null) {
-                    res.status.set(JavaVersionList.Status.SUCCESS);
+                    res.status.set(DiscoJavaVersionList.Status.SUCCESS);
                     res.versions.setAll(result);
                 } else {
                     LOG.warning("Failed to load java list", exception);
-                    res.status.set(JavaVersionList.Status.FAILED);
+                    res.status.set(DiscoJavaVersionList.Status.FAILED);
                 }
             })).start();
             return res;
         });
-        this.currentVersionList.set(list);
+        this.currentDiscoJavaVersionList.set(list);
         this.remoteVersionBox.setItems(list.versions);
     }
 
-    private static final class JavaVersionList {
+    private static final class DiscoJavaVersionList {
         enum Status {
             LOADING, SUCCESS, FAILED
         }
