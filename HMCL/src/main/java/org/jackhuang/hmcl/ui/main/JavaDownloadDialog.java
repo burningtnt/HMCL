@@ -20,6 +20,7 @@ package org.jackhuang.hmcl.ui.main;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDialogLayout;
+import com.jfoenix.controls.JFXProgressBar;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -27,8 +28,11 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import org.jackhuang.hmcl.download.DownloadProvider;
 import org.jackhuang.hmcl.download.java.JavaDistribution;
 import org.jackhuang.hmcl.download.java.JavaPackageType;
@@ -73,7 +77,7 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
     private final JFXComboBox<JavaDistribution<?>> distributionBox;
     private final JFXComboBox<JavaRemoteVersion> remoteVersionBox;
     private final JFXComboBox<JavaPackageType> packageTypeBox;
-    private final SpinnerPane downloadButtonPane = new SpinnerPane();
+    private final Label warningLabel = new Label();
 
     private final DownloadProvider downloadProvider = DownloadProviders.getDownloadProvider();
 
@@ -98,7 +102,6 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
         downloadButton.setOnAction(e -> onDownload());
         downloadButton.getStyleClass().add("dialog-accept");
         downloadButton.disableProperty().bind(Bindings.isNull(remoteVersionBox.getSelectionModel().selectedItemProperty()));
-        downloadButtonPane.setContent(downloadButton);
 
         JFXButton cancelButton = new JFXButton(i18n("button.cancel"));
         cancelButton.setOnAction(e -> fireEvent(new DialogCloseEvent()));
@@ -167,29 +170,19 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
         setHeading(new Label(i18n("java.download")));
         setBody(body);
-        setActions(downloadButtonPane, cancelButton);
+        setActions(warningLabel, downloadButton, cancelButton);
     }
 
     private void updateStatus(DiscoJavaVersionList.Status status) {
-        if (status == null) {
-            downloadButtonPane.hideSpinner();
+        if (status == DiscoJavaVersionList.Status.SUCCESS || status == null) {
+            warningLabel.setText(null);
             remoteVersionBox.setDisable(false);
-            return;
-        }
-
-        switch (status) {
-            case LOADING:
-                downloadButtonPane.showSpinner();
-                remoteVersionBox.setDisable(true);
-                break;
-            case SUCCESS:
-                downloadButtonPane.hideSpinner();
-                remoteVersionBox.setDisable(false);
-                break;
-            case FAILED:
-                downloadButtonPane.setFailedReason(i18n("java.download.load_list.failed"));
-                remoteVersionBox.setDisable(true);
-                break;
+        } else if (status == DiscoJavaVersionList.Status.LOADING) {
+            warningLabel.setText(null);
+            remoteVersionBox.setDisable(true);
+        } else if (status == DiscoJavaVersionList.Status.FAILED) {
+            warningLabel.setText(i18n("java.download.load_list.failed"));
+            remoteVersionBox.setDisable(true);
         }
     }
 
