@@ -17,10 +17,7 @@
  */
 package org.jackhuang.hmcl.ui.main;
 
-import com.jfoenix.controls.JFXButton;
-import com.jfoenix.controls.JFXComboBox;
-import com.jfoenix.controls.JFXDialogLayout;
-import com.jfoenix.controls.JFXProgressBar;
+import com.jfoenix.controls.*;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -79,6 +76,9 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
     private final JFXComboBox<JavaPackageType> packageTypeBox;
     private final Label warningLabel = new Label();
 
+    private final JFXButton downloadButton;
+    private final StackPane downloadButtonPane = new StackPane();
+
     private final DownloadProvider downloadProvider = DownloadProviders.getDownloadProvider();
 
     private final ObjectProperty<DiscoJavaVersionList> currentDiscoJavaVersionList = new SimpleObjectProperty<>();
@@ -98,10 +98,11 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
         this.packageTypeBox = new JFXComboBox<>();
 
-        JFXButton downloadButton = new JFXButton(i18n("download"));
+        this.downloadButton = new JFXButton(i18n("download"));
         downloadButton.setOnAction(e -> onDownload());
         downloadButton.getStyleClass().add("dialog-accept");
         downloadButton.disableProperty().bind(Bindings.isNull(remoteVersionBox.getSelectionModel().selectedItemProperty()));
+        downloadButtonPane.getChildren().setAll(downloadButton);
 
         JFXButton cancelButton = new JFXButton(i18n("button.cancel"));
         cancelButton.setOnAction(e -> fireEvent(new DialogCloseEvent()));
@@ -170,19 +171,23 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
 
         setHeading(new Label(i18n("java.download")));
         setBody(body);
-        setActions(warningLabel, downloadButton, cancelButton);
+        setActions(warningLabel, downloadButtonPane, cancelButton);
     }
 
     private void updateStatus(DiscoJavaVersionList.Status status) {
-        if (status == DiscoJavaVersionList.Status.SUCCESS || status == null) {
-            warningLabel.setText(null);
-            remoteVersionBox.setDisable(false);
-        } else if (status == DiscoJavaVersionList.Status.LOADING) {
-            warningLabel.setText(null);
+        if (status == DiscoJavaVersionList.Status.LOADING) {
+            downloadButtonPane.getChildren().setAll(new JFXSpinner());
             remoteVersionBox.setDisable(true);
-        } else if (status == DiscoJavaVersionList.Status.FAILED) {
-            warningLabel.setText(i18n("java.download.load_list.failed"));
-            remoteVersionBox.setDisable(true);
+            warningLabel.setText(null);
+        } else {
+            downloadButtonPane.getChildren().setAll(downloadButton);
+            if (status == DiscoJavaVersionList.Status.SUCCESS || status == null) {
+                remoteVersionBox.setDisable(false);
+                warningLabel.setText(null);
+            } else if (status == DiscoJavaVersionList.Status.FAILED) {
+                remoteVersionBox.setDisable(true);
+                warningLabel.setText(i18n("java.download.load_list.failed"));
+            }
         }
     }
 

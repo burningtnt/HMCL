@@ -46,9 +46,12 @@ public final class DiscoFetchJavaListTask extends Task<TreeMap<Integer, DiscoJav
         return arch.getCheckedName();
     }
 
+    private final DiscoJavaDistribution distribution;
     private final Task<String> fetchPackagesTask;
 
     public DiscoFetchJavaListTask(DownloadProvider downloadProvider, DiscoJavaDistribution distribution, Platform platform, JavaPackageType packageType) {
+        this.distribution = distribution;
+
         HashMap<String, String> params = new HashMap<>();
         params.put("distribution", distribution.getApiParameter());
 
@@ -88,6 +91,9 @@ public final class DiscoFetchJavaListTask extends Task<TreeMap<Integer, DiscoJav
         TreeMap<Integer, DiscoJavaRemoteVersion> map = new TreeMap<>();
 
         for (DiscoJavaRemoteVersion version : result) {
+            if (!distribution.getApiParameter().equals(version.getDistribution()))
+                continue;
+
             int jdkVersion = version.getJdkVersion();
             DiscoJavaRemoteVersion oldVersion = map.get(jdkVersion);
             if (oldVersion == null || VersionNumber.compare(version.getDistributionVersion(), oldVersion.getDistributionVersion()) > 0) {
