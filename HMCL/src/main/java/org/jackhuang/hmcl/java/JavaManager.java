@@ -60,7 +60,7 @@ public final class JavaManager {
 
     public static final HMCLJavaRepository REPOSITORY = new HMCLJavaRepository(Metadata.HMCL_DIRECTORY.resolve("java"));
 
-    public static String getJavaPlatform(Platform platform) {
+    public static String getMojangJavaPlatform(Platform platform) {
         if (platform.getOperatingSystem() == OperatingSystem.WINDOWS) {
             if (Architecture.SYSTEM_ARCH == Architecture.X86) {
                 return "windows-x86";
@@ -210,17 +210,6 @@ public final class JavaManager {
             allJava = newMap;
             updateAllJavaProperty(newMap);
         }
-    }
-
-    // FXThread
-    public static boolean isInstalled(GameJavaVersion javaVersion) throws InterruptedException {
-        for (JavaRuntime java : getAllJava()) {
-            if (java.isManaged() && java.getParsedVersion() == javaVersion.getMajorVersion()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static int compareJavaVersion(JavaRuntime java1, JavaRuntime java2, GameJavaVersion suggestedJavaVersion) {
@@ -533,22 +522,22 @@ public final class JavaManager {
         // $HOME/Library/Application Support/minecraft/runtime/java-runtime-beta/mac-os/java-runtime-beta/jre.bundle/Contents/Home
         // $HOME/.minecraft/runtime/java-runtime-beta/linux/java-runtime-beta
 
-        String javaPlatform = getJavaPlatform(Platform.SYSTEM_PLATFORM);
+        String javaPlatform = getMojangJavaPlatform(Platform.SYSTEM_PLATFORM);
         if (javaPlatform != null) {
             searchAllOfficialJava(javaRuntimes, directory, javaPlatform, verify);
         }
 
         if (OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS) {
             if (Architecture.SYSTEM_ARCH == Architecture.X86_64) {
-                searchAllOfficialJava(javaRuntimes, directory, getJavaPlatform(Platform.WINDOWS_X86), verify);
+                searchAllOfficialJava(javaRuntimes, directory, getMojangJavaPlatform(Platform.WINDOWS_X86), verify);
             } else if (Architecture.SYSTEM_ARCH == Architecture.ARM64) {
                 if (OperatingSystem.SYSTEM_BUILD_NUMBER >= 21277) {
-                    searchAllOfficialJava(javaRuntimes, directory, getJavaPlatform(Platform.WINDOWS_X86_64), verify);
+                    searchAllOfficialJava(javaRuntimes, directory, getMojangJavaPlatform(Platform.WINDOWS_X86_64), verify);
                 }
-                searchAllOfficialJava(javaRuntimes, directory, getJavaPlatform(Platform.WINDOWS_X86), verify);
+                searchAllOfficialJava(javaRuntimes, directory, getMojangJavaPlatform(Platform.WINDOWS_X86), verify);
             }
         } else if (OperatingSystem.CURRENT_OS == OperatingSystem.OSX && Architecture.CURRENT_ARCH == Architecture.ARM64) {
-            searchAllOfficialJava(javaRuntimes, directory, getJavaPlatform(Platform.OSX_X86_64), verify);
+            searchAllOfficialJava(javaRuntimes, directory, getMojangJavaPlatform(Platform.OSX_X86_64), verify);
         }
     }
 

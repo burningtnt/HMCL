@@ -30,6 +30,10 @@ public final class MojangJavaRemoteVersion implements JavaRemoteVersion {
         this.gameJavaVersion = gameJavaVersion;
     }
 
+    public GameJavaVersion getGameJavaVersion() {
+        return gameJavaVersion;
+    }
+
     @Override
     public int getJdkVersion() {
         return gameJavaVersion.getMajorVersion();

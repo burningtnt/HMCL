@@ -25,10 +25,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import org.jackhuang.hmcl.download.DownloadProvider;
 import org.jackhuang.hmcl.download.java.JavaDistribution;
@@ -40,11 +38,11 @@ import org.jackhuang.hmcl.download.java.disco.DiscoJavaRemoteVersion;
 import org.jackhuang.hmcl.download.java.mojang.MojangJavaDistribution;
 import org.jackhuang.hmcl.download.java.mojang.MojangJavaRemoteVersion;
 import org.jackhuang.hmcl.game.GameJavaVersion;
+import org.jackhuang.hmcl.java.JavaManager;
 import org.jackhuang.hmcl.setting.DownloadProviders;
 import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.ui.FXUtils;
 import org.jackhuang.hmcl.ui.construct.DialogCloseEvent;
-import org.jackhuang.hmcl.ui.construct.SpinnerPane;
 import org.jackhuang.hmcl.util.Pair;
 import org.jackhuang.hmcl.util.platform.Platform;
 
@@ -192,7 +190,22 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
     }
 
     private void onDownload() {
-        throw new UnsupportedOperationException("TODO");
+        JavaDistribution<?> distribution = distributionBox.getSelectionModel().getSelectedItem();
+        if (distribution instanceof MojangJavaDistribution) {
+            onDownloadMojangJava();
+        } else
+            throw new AssertionError("Unknown distribution type: " + distribution.getClass());
+    }
+
+    private void onDownloadMojangJava() {
+        MojangJavaRemoteVersion version = (MojangJavaRemoteVersion) remoteVersionBox.getSelectionModel().getSelectedItem();
+        if (version == null)
+            return;
+
+        GameJavaVersion gameJavaVersion = version.getGameJavaVersion();
+        if (JavaManager.REPOSITORY.isInstalled(Platform.SYSTEM_PLATFORM, gameJavaVersion)) {
+            // TODO
+        }
     }
 
     private void updateVersions() {
@@ -232,6 +245,7 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
                 if (exception == null) {
                     res.status.set(DiscoJavaVersionList.Status.SUCCESS);
                     res.versions.setAll(result);
+                    selectLTS(res);
                 } else {
                     LOG.warning("Failed to load java list", exception);
                     res.status.set(DiscoJavaVersionList.Status.FAILED);
@@ -241,6 +255,19 @@ public final class JavaDownloadDialog extends JFXDialogLayout {
         });
         this.currentDiscoJavaVersionList.set(list);
         this.remoteVersionBox.setItems(list.versions);
+        selectLTS(list);
+    }
+
+    private void selectLTS(DiscoJavaVersionList list) {
+        if (remoteVersionBox.getItems() == list.versions) {
+            for (int i = 0; i < list.versions.size(); i++) {
+                JavaRemoteVersion item = list.versions.get(i);
+                if (item.getJdkVersion() == GameJavaVersion.LATEST.getMajorVersion()) {
+                    remoteVersionBox.getSelectionModel().select(i);
+                    break;
+                }
+            }
+        }
     }
 
     private static final class DiscoJavaVersionList {
