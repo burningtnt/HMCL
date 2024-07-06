@@ -135,7 +135,7 @@ public class GameCrashWindow extends Stage {
                 Task.supplyAsync(() -> Analyzer.analyze(AnalyzableType.Log.GAME, new LogAnalyzable(
                         version, analyzer, repository, managedProcess, exitType, launchOptions, logs.stream().map(Pair::getKey).collect(Collectors.toList()))
                 )).whenComplete(Schedulers.javafx(), (result, exception) -> {
-                    if (result.isEmpty() || exception == null) {
+                    if (exception == null && !result.isEmpty()) {
                         HMCLSolverPane<LogAnalyzable> pane = new HMCLSolverPane<>(result.iterator());
                         VBox.setVgrow(pane, Priority.ALWAYS);
                         getChildren().set(getChildren().indexOf(analyzing), pane);
