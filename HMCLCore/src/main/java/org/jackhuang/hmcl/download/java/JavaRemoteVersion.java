@@ -24,4 +24,6 @@ public interface JavaRemoteVersion {
     int getJdkVersion();
 
     String getJavaVersion();
+
+    String getDistributionVersion();
 }

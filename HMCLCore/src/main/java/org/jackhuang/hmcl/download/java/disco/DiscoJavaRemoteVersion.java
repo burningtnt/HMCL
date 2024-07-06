@@ -23,7 +23,7 @@ import org.jackhuang.hmcl.download.java.JavaRemoteVersion;
 /**
  * @author Glavo
  */
-public final class DiscoRemoteVersion implements JavaRemoteVersion {
+public final class DiscoJavaRemoteVersion implements JavaRemoteVersion {
     @SerializedName("id")
     private final String id;
 
@@ -57,7 +57,7 @@ public final class DiscoRemoteVersion implements JavaRemoteVersion {
     @SerializedName("links")
     private final Links links;
 
-    public DiscoRemoteVersion(String id, String archiveType, String distribution, int jdkVersion, String javaVersion, String distributionVersion, String operatingSystem, String architecture, String packageType, boolean directlyDownloadable, Links links) {
+    public DiscoJavaRemoteVersion(String id, String archiveType, String distribution, int jdkVersion, String javaVersion, String distributionVersion, String operatingSystem, String architecture, String packageType, boolean directlyDownloadable, Links links) {
         this.id = id;
         this.archiveType = archiveType;
         this.distribution = distribution;
@@ -93,6 +93,7 @@ public final class DiscoRemoteVersion implements JavaRemoteVersion {
         return javaVersion;
     }
 
+    @Override
     public String getDistributionVersion() {
         return distributionVersion;
     }

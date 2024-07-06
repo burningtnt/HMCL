@@ -15,22 +15,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.jackhuang.hmcl.download.java;
+package org.jackhuang.hmcl.download.java.mojang;
 
 import org.jackhuang.hmcl.download.DownloadProvider;
+import org.jackhuang.hmcl.download.java.JavaDistribution;
+import org.jackhuang.hmcl.download.java.JavaPackageType;
+import org.jackhuang.hmcl.download.java.JavaRemoteVersion;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.util.platform.Platform;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.TreeMap;
 
 /**
  * @author Glavo
  */
-public interface JavaDistribution<V extends JavaRemoteVersion> {
-    String getDisplayName();
+public final class MojangJavaDistribution implements JavaDistribution<JavaRemoteVersion> {
 
-    Set<JavaPackageType> getSupportedPackageTypes();
+    public static final MojangJavaDistribution DISTRIBUTION = new MojangJavaDistribution();
 
-    Task<TreeMap<Integer, V>> getFetchJavaVersionsTask(DownloadProvider provider, Platform platform, JavaPackageType packageType);
+    private MojangJavaDistribution() {
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Mojang";
+    }
+
+    @Override
+    public Set<JavaPackageType> getSupportedPackageTypes() {
+        return Collections.singleton(JavaPackageType.JRE);
+    }
+
+    @Override
+    public Task<TreeMap<Integer, JavaRemoteVersion>> getFetchJavaVersionsTask(DownloadProvider provider, Platform platform, JavaPackageType packageType) {
+        return null;
+    }
 }

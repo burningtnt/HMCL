@@ -30,6 +30,8 @@ public final class GameJavaVersion {
     public static final GameJavaVersion JAVA_16 = new GameJavaVersion("java-runtime-alpha", 16);
     public static final GameJavaVersion JAVA_8 = new GameJavaVersion("jre-legacy", 8);
 
+    public static final GameJavaVersion LATEST = JAVA_21;
+
     public static GameJavaVersion getMinimumJavaVersion(GameVersionNumber gameVersion) {
         if (gameVersion.compareTo("1.21") >= 0)
             return JAVA_21;
@@ -40,6 +42,16 @@ public final class GameJavaVersion {
         if (gameVersion.compareTo("1.13") >= 0)
             return JAVA_8;
         return null;
+    }
+
+    public static GameJavaVersion normalize(int javaVersion) {
+        if (javaVersion > 17) {
+            return JAVA_21;
+        }
+        if (javaVersion > 11) {
+            return JAVA_17;
+        }
+        return JAVA_8;
     }
 
     public static GameJavaVersion get(int major) {
@@ -54,6 +66,21 @@ public final class GameJavaVersion {
                 return JAVA_21;
             default:
                 return null;
+        }
+    }
+
+    public static boolean isSupportedPlatform(Platform platform) {
+        OperatingSystem os = platform.getOperatingSystem();
+        Architecture arch = platform.getArchitecture();
+        switch (arch) {
+            case X86:
+                return os == OperatingSystem.WINDOWS || os == OperatingSystem.LINUX;
+            case X86_64:
+                return os == OperatingSystem.WINDOWS || os == OperatingSystem.LINUX || os == OperatingSystem.OSX;
+            case ARM64:
+                return os == OperatingSystem.WINDOWS || os == OperatingSystem.OSX;
+            default:
+                return false;
         }
     }
 
@@ -77,7 +104,6 @@ public final class GameJavaVersion {
         } else if (architecture == Architecture.ARM64) {
             switch (operatingSystem) {
                 case WINDOWS:
-                case LINUX:
                 case OSX:
                     return Arrays.asList(JAVA_17, JAVA_21);
             }

@@ -15,13 +15,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.jackhuang.hmcl.ui.main;
+package org.jackhuang.hmcl.download.java;
 
-import org.jackhuang.hmcl.ui.construct.DialogPane;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * @author Glavo
  */
-public final class NewJavaDownloadDialog extends DialogPane {
-    // TODO
+public enum JavaPackageType {
+    JDK,
+    JRE,
+    JDKFX,
+    JREFX;
+
+    public static final Set<JavaPackageType> ONLY_JDK = Collections.singleton(JDK);
+    public static final Set<JavaPackageType> ONLY_JRE = Collections.singleton(JRE);
+    public static final Set<JavaPackageType> FULL = Collections.unmodifiableSet(EnumSet.of(JDK, JRE));
+    public static final Set<JavaPackageType> FULLFX = Collections.unmodifiableSet(EnumSet.of(JDK, JRE, JDKFX, JREFX));
 }

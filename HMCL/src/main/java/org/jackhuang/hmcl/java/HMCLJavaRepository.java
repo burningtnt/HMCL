@@ -1,3 +1,20 @@
+/*
+ * Hello Minecraft! Launcher
+ * Copyright (C) 2024 huangyuhui <huanghongxun2008@126.com> and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package org.jackhuang.hmcl.java;
 
 import org.jackhuang.hmcl.download.ArtifactMalformedException;
@@ -25,6 +42,8 @@ import static org.jackhuang.hmcl.util.logging.Logger.LOG;
  * @author Glavo
  */
 public final class HMCLJavaRepository implements JavaRepository {
+    public static final String MOJANG_JAVA_PREFIX = "mojang-";
+
     private final Path root;
 
     public HMCLJavaRepository(Path root) {
@@ -39,8 +58,24 @@ public final class HMCLJavaRepository implements JavaRepository {
         return getPlatformRoot(platform).resolve(name);
     }
 
+    public Path getJavaDir(Platform platform, GameJavaVersion gameJavaVersion) {
+        return getJavaDir(platform, MOJANG_JAVA_PREFIX + gameJavaVersion.getComponent());
+    }
+
     public Path getManifestFile(Platform platform, String name) {
         return getPlatformRoot(platform).resolve(name + ".json");
+    }
+
+    public Path getManifestFile(Platform platform, GameJavaVersion gameJavaVersion) {
+        return getManifestFile(platform, MOJANG_JAVA_PREFIX + gameJavaVersion.getComponent());
+    }
+
+    public boolean isInstalled(Platform platform, String name) {
+        return Files.exists(getManifestFile(platform, name));
+    }
+
+    public boolean isInstalled(Platform platform, GameJavaVersion gameJavaVersion) {
+        return isInstalled(platform, MOJANG_JAVA_PREFIX + gameJavaVersion.getComponent());
     }
 
     @Override
@@ -87,50 +122,49 @@ public final class HMCLJavaRepository implements JavaRepository {
 
     @Override
     public Task<JavaRuntime> getInstallJavaTask(DownloadProvider downloadProvider, Platform platform, GameJavaVersion gameJavaVersion) {
-        Path javaDir = getJavaDir(platform, gameJavaVersion.getComponent());
+        Path javaDir = getJavaDir(platform, gameJavaVersion);
 
-        return new MojangJavaDownloadTask(downloadProvider, javaDir, gameJavaVersion, JavaManager.getJavaPlatform(platform))
-                .thenApplyAsync(result -> {
-                    Path executable;
-                    try {
-                        executable = JavaManager.getExecutable(javaDir).toRealPath();
-                    } catch (IOException e) {
-                        if (platform.getOperatingSystem() == OperatingSystem.OSX)
-                            executable = JavaManager.getMacExecutable(javaDir).toRealPath();
-                        else
-                            throw e;
+        return new MojangJavaDownloadTask(downloadProvider, javaDir, gameJavaVersion, JavaManager.getMojangJavaPlatform(platform)).thenApplyAsync(result -> {
+            Path executable;
+            try {
+                executable = JavaManager.getExecutable(javaDir).toRealPath();
+            } catch (IOException e) {
+                if (platform.getOperatingSystem() == OperatingSystem.OSX)
+                    executable = JavaManager.getMacExecutable(javaDir).toRealPath();
+                else
+                    throw e;
+            }
+
+            JavaInfo info;
+            if (JavaManager.isCompatible(platform)) {
+                info = JavaInfo.fromExecutable(executable, false);
+                if (info == null)
+                    throw new ArtifactMalformedException("Unable to read Java information");
+            } else
+                info = new JavaInfo(platform, result.download.getVersion().getName(), null);
+
+            Map<String, Object> update = new LinkedHashMap<>();
+            update.put("provider", "mojang");
+            update.put("component", gameJavaVersion.getComponent());
+
+            Map<String, JavaLocalFiles.Local> files = new LinkedHashMap<>();
+            result.remoteFiles.getFiles().forEach((path, file) -> {
+                if (file instanceof MojangJavaRemoteFiles.RemoteFile) {
+                    DownloadInfo downloadInfo = ((MojangJavaRemoteFiles.RemoteFile) file).getDownloads().get("raw");
+                    if (downloadInfo != null) {
+                        files.put(path, new JavaLocalFiles.LocalFile(downloadInfo.getSha1(), downloadInfo.getSize()));
                     }
+                } else if (file instanceof MojangJavaRemoteFiles.RemoteDirectory) {
+                    files.put(path, new JavaLocalFiles.LocalDirectory());
+                } else if (file instanceof MojangJavaRemoteFiles.RemoteLink) {
+                    files.put(path, new JavaLocalFiles.LocalLink(((MojangJavaRemoteFiles.RemoteLink) file).getTarget()));
+                }
+            });
 
-                    JavaInfo info;
-                    if (JavaManager.isCompatible(platform)) {
-                        info = JavaInfo.fromExecutable(executable, false);
-                        if (info == null)
-                            throw new ArtifactMalformedException("Unable to read Java information");
-                    } else
-                        info = new JavaInfo(platform, result.download.getVersion().getName(), null);
-
-                    Map<String, Object> update = new LinkedHashMap<>();
-                    update.put("provider", "mojang");
-                    update.put("component", gameJavaVersion.getComponent());
-
-                    Map<String, JavaLocalFiles.Local> files = new LinkedHashMap<>();
-                    result.remoteFiles.getFiles().forEach((path, file) -> {
-                        if (file instanceof MojangJavaRemoteFiles.RemoteFile) {
-                            DownloadInfo downloadInfo = ((MojangJavaRemoteFiles.RemoteFile) file).getDownloads().get("raw");
-                            if (downloadInfo != null) {
-                                files.put(path, new JavaLocalFiles.LocalFile(downloadInfo.getSha1(), downloadInfo.getSize()));
-                            }
-                        } else if (file instanceof MojangJavaRemoteFiles.RemoteDirectory) {
-                            files.put(path, new JavaLocalFiles.LocalDirectory());
-                        } else if (file instanceof MojangJavaRemoteFiles.RemoteLink) {
-                            files.put(path, new JavaLocalFiles.LocalLink(((MojangJavaRemoteFiles.RemoteLink) file).getTarget()));
-                        }
-                    });
-
-                    JavaManifest manifest = new JavaManifest(info, update, files);
-                    FileUtils.writeText(getManifestFile(platform, gameJavaVersion.getComponent()), JsonUtils.GSON.toJson(manifest));
-                    return JavaRuntime.of(executable, info, true);
-                });
+            JavaManifest manifest = new JavaManifest(info, update, files);
+            FileUtils.writeText(getManifestFile(platform, gameJavaVersion), JsonUtils.GSON.toJson(manifest));
+            return JavaRuntime.of(executable, info, true);
+        });
     }
 
     @Override
