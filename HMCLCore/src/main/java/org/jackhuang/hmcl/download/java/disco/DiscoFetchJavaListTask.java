@@ -19,6 +19,7 @@ package org.jackhuang.hmcl.download.java.disco;
 
 import com.google.gson.reflect.TypeToken;
 import org.jackhuang.hmcl.download.DownloadProvider;
+import org.jackhuang.hmcl.download.java.JavaPackageType;
 import org.jackhuang.hmcl.task.GetTask;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.util.gson.JsonUtils;
@@ -33,23 +34,9 @@ import java.util.*;
 /**
  * @author Glavo
  */
-public final class DiscoFetchJavaListTask extends Task<TreeMap<Integer, DiscoRemoteVersion>> {
+public final class DiscoFetchJavaListTask extends Task<TreeMap<Integer, DiscoJavaRemoteVersion>> {
 
     public static final String API_ROOT = System.getProperty("hmcl.discoapi.override", "https://api.foojay.io/disco/v3.0");
-
-    private static final int LATEST_LTS = 21;
-
-    private static boolean isLTS(int major) {
-        if (major <= 8) {
-            return true;
-        }
-
-        if (major < 21) {
-            return major == 11 || major == 17;
-        }
-
-        return major % 4 == 1;
-    }
 
     private static String getOperatingSystemName(OperatingSystem os) {
         return os == OperatingSystem.OSX ? "macos" : os.getCheckedName();
@@ -59,13 +46,29 @@ public final class DiscoFetchJavaListTask extends Task<TreeMap<Integer, DiscoRem
         return arch.getCheckedName();
     }
 
+    private final DiscoJavaDistribution distribution;
     private final Task<String> fetchPackagesTask;
 
-    public DiscoFetchJavaListTask(DownloadProvider downloadProvider, DiscoJavaDistribution distribution, Platform platform, boolean isJRE) {
+    public DiscoFetchJavaListTask(DownloadProvider downloadProvider, DiscoJavaDistribution distribution, Platform platform, JavaPackageType packageType) {
+        this.distribution = distribution;
+
         HashMap<String, String> params = new HashMap<>();
-        params.put("distribution", distribution.name().toLowerCase(Locale.ROOT));
-        params.put("package_type", isJRE ? "jre" : "jdk");
-        params.put("javafx_bundle", "false");
+        params.put("distribution", distribution.getApiParameter());
+
+        switch (packageType) {
+            case JDK:
+            case JDKFX:
+                params.put("package", "jdk");
+                break;
+            case JRE:
+            case JREFX:
+                params.put("package", "jre");
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported package type: " + packageType);
+        }
+
+        params.put("javafx_bundled", Boolean.toString(packageType == JavaPackageType.JDKFX || packageType == JavaPackageType.JREFX));
         params.put("operating_system", getOperatingSystemName(platform.getOperatingSystem()));
         params.put("architecture", getArchitectureName(platform.getArchitecture()));
         params.put("archive_type", platform.getOperatingSystem() == OperatingSystem.WINDOWS ? "zip" : "tar.gz");
@@ -82,18 +85,19 @@ public final class DiscoFetchJavaListTask extends Task<TreeMap<Integer, DiscoRem
     @Override
     public void execute() throws Exception {
         String json = fetchPackagesTask.getResult();
-        List<DiscoRemoteVersion> result = JsonUtils.<Result<DiscoRemoteVersion>>fromNonNullJson(json, new TypeToken<Result<DiscoRemoteVersion>>() {
+        List<DiscoJavaRemoteVersion> result = JsonUtils.<Result<DiscoJavaRemoteVersion>>fromNonNullJson(json, new TypeToken<Result<DiscoJavaRemoteVersion>>() {
         }.getType()).result;
 
-        TreeMap<Integer, DiscoRemoteVersion> map = new TreeMap<>();
+        TreeMap<Integer, DiscoJavaRemoteVersion> map = new TreeMap<>();
 
-        for (DiscoRemoteVersion version : result) {
+        for (DiscoJavaRemoteVersion version : result) {
+            if (!distribution.getApiParameter().equals(version.getDistribution()))
+                continue;
+
             int jdkVersion = version.getJdkVersion();
-            if (isLTS(jdkVersion) || jdkVersion == 16 || jdkVersion > LATEST_LTS) {
-                DiscoRemoteVersion oldVersion = map.get(jdkVersion);
-                if (oldVersion == null || VersionNumber.compare(version.getDistributionVersion(), oldVersion.getDistributionVersion()) > 0) {
-                    map.put(jdkVersion, version);
-                }
+            DiscoJavaRemoteVersion oldVersion = map.get(jdkVersion);
+            if (oldVersion == null || VersionNumber.compare(version.getDistributionVersion(), oldVersion.getDistributionVersion()) > 0) {
+                map.put(jdkVersion, version);
             }
         }
 
@@ -109,5 +113,4 @@ public final class DiscoFetchJavaListTask extends Task<TreeMap<Integer, DiscoRem
             this.message = message;
         }
     }
-
 }
