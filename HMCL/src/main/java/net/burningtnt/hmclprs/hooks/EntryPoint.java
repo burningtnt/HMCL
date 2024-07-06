@@ -8,7 +8,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
 public @interface EntryPoint {
-    LifeCycle value();
+    LifeCycle when();
+
+    Type type();
 
     enum LifeCycle {
         /**
@@ -19,5 +21,11 @@ public @interface EntryPoint {
          * Invoked after Application launches. All packages from HMCL project is available.
          */
         RUNTIME
+    }
+
+    enum Type {
+        INJECT,
+        VALUE_MUTATION,
+        REDIRECT
     }
 }

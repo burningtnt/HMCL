@@ -1,8 +1,9 @@
 package net.burningtnt.hmclprs;
 
-import net.burningtnt.hmclprs.hooks.HookContainer;
+import javafx.application.Platform;
 import net.burningtnt.hmclprs.hooks.EntryPoint;
 import net.burningtnt.hmclprs.hooks.Final;
+import net.burningtnt.hmclprs.hooks.HookContainer;
 
 import javax.swing.*;
 
@@ -20,7 +21,7 @@ public final class PRCollection {
     @Final
     private static volatile String defaultVersion;
 
-    @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
+    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.INJECT)
     public static void onApplicationLaunch() {
         if ("ignore".equals(System.getenv("HMCL_PR_WARNING")) || "ignore".equals(System.getProperty("hmcl.pr.warning"))) {
             return;
@@ -33,34 +34,39 @@ public final class PRCollection {
         }
     }
 
-    @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
+    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.VALUE_MUTATION)
     public static String onInitApplicationName(String name) {
         return name + PR_COLLECTION_SUFFIX;
     }
 
-    @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
+    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.VALUE_MUTATION)
     public static String onInitApplicationFullName(String fullName) {
         return fullName + PR_COLLECTION_SUFFIX;
     }
 
-    @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
+    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.VALUE_MUTATION)
     public static String onInitApplicationVersion(String defaultVersion) {
         PRCollection.defaultVersion = defaultVersion;
         return defaultVersion + PR_COLLECTION_SUFFIX;
     }
 
-    @EntryPoint(EntryPoint.LifeCycle.RUNTIME)
+    @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.VALUE_MUTATION)
     public static String onGetApplicationRawVersion(String version) {
         return defaultVersion;
     }
 
-    @EntryPoint(EntryPoint.LifeCycle.BOOTSTRAP)
+    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.VALUE_MUTATION)
     public static String onInitApplicationDefaultUpdateLink(String url) {
         return UPDATE_LINK;
     }
 
-    @EntryPoint(EntryPoint.LifeCycle.RUNTIME)
+    @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.VALUE_MUTATION)
     public static String onInitDisableSelfIntegrityCheckProperty(String value) {
         return value == null ? "true" : value;
+    }
+
+    @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.INJECT)
+    public static void onUpdateFrom(Runnable updateRunnable) {
+        Platform.runLater(updateRunnable);
     }
 }
