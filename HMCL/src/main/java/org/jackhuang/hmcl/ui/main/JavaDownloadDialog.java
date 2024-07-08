@@ -280,7 +280,9 @@ public final class JavaDownloadDialog extends StackPane {
         }
 
         private void onDownload() {
-            JavaDistribution<?> distribution = distributionBox.getSelectionModel().getSelectedItem();
+            fireEvent(new DialogCloseEvent());
+
+            DiscoJavaDistribution distribution = distributionBox.getSelectionModel().getSelectedItem();
             throw new AssertionError("Unknown distribution type: " + distribution.getClass());
         }
 
