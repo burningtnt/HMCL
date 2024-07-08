@@ -22,13 +22,10 @@ import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.stage.FileChooser;
-import org.jackhuang.hmcl.download.java.JavaDistribution;
-import org.jackhuang.hmcl.download.java.disco.DiscoJavaDistribution;
-import org.jackhuang.hmcl.download.java.mojang.MojangJavaDistribution;
-import org.jackhuang.hmcl.game.GameJavaVersion;
 import org.jackhuang.hmcl.java.JavaManager;
 import org.jackhuang.hmcl.java.JavaRuntime;
 import org.jackhuang.hmcl.setting.ConfigHolder;
+import org.jackhuang.hmcl.setting.DownloadProviders;
 import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.ui.*;
@@ -63,21 +60,7 @@ public final class JavaManagementPage extends ListPageBase<JavaItem> {
             //noinspection HttpUrlsUsage
             onInstallJava = () -> FXUtils.openLink("http://www.loongnix.cn/zh/api/java/");
         } else {
-            ArrayList<JavaDistribution<?>> distributions = new ArrayList<>();
-            if (GameJavaVersion.isSupportedPlatform(Platform.SYSTEM_PLATFORM)) {
-                distributions.add(MojangJavaDistribution.DISTRIBUTION);
-            }
-
-            for (DiscoJavaDistribution distribution : DiscoJavaDistribution.values()) {
-                if (distribution.isSupport(Platform.SYSTEM_PLATFORM)) {
-                    distributions.add(distribution);
-                }
-            }
-
-            if (!distributions.isEmpty())
-                onInstallJava = () -> Controllers.dialog(new JavaDownloadDialog(distributions));
-            else
-                onInstallJava = null;
+            onInstallJava = JavaDownloadDialog.showDialogAction(DownloadProviders.getDownloadProvider());
         }
     }
 

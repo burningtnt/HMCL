@@ -15,5 +15,7 @@ public interface JavaRepository {
 
     Task<JavaRuntime> getInstallJavaTask(DownloadProvider downloadProvider, Platform platform, GameJavaVersion gameJavaVersion);
 
+    Task<Void> getUninstallJavaTask(Platform platform, String name);
+
     Task<Void> getUninstallJavaTask(JavaRuntime java);
 }
