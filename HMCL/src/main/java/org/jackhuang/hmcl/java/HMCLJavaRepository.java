@@ -55,6 +55,7 @@ public final class HMCLJavaRepository implements JavaRepository {
         return root.resolve(platform.toString());
     }
 
+    @Override
     public Path getJavaDir(Platform platform, String name) {
         return getPlatformRoot(platform).resolve(name);
     }
@@ -63,6 +64,7 @@ public final class HMCLJavaRepository implements JavaRepository {
         return getJavaDir(platform, MOJANG_JAVA_PREFIX + gameJavaVersion.getComponent());
     }
 
+    @Override
     public Path getManifestFile(Platform platform, String name) {
         return getPlatformRoot(platform).resolve(name + ".json");
     }
