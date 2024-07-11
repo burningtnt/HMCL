@@ -22,6 +22,8 @@ import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.stage.FileChooser;
+import org.apache.commons.compress.archivers.tar.TarFile;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.jackhuang.hmcl.java.JavaManager;
 import org.jackhuang.hmcl.java.JavaRuntime;
 import org.jackhuang.hmcl.setting.ConfigHolder;
@@ -30,16 +32,18 @@ import org.jackhuang.hmcl.task.Schedulers;
 import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.ui.*;
 import org.jackhuang.hmcl.ui.construct.MessageDialogPane;
+import org.jackhuang.hmcl.util.io.FileUtils;
 import org.jackhuang.hmcl.util.platform.Architecture;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
 import org.jackhuang.hmcl.util.platform.Platform;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import static org.jackhuang.hmcl.util.i18n.I18n.i18n;
 
@@ -62,6 +66,22 @@ public final class JavaManagementPage extends ListPageBase<JavaItem> {
         } else {
             onInstallJava = JavaDownloadDialog.showDialogAction(DownloadProviders.getDownloadProvider());
         }
+
+        FXUtils.applyDragListener(this, it -> {
+            String name = it.getName();
+            return name.endsWith(".zip") || name.endsWith(".tar.gz");
+        }, files -> {
+            File file = files.get(0);
+            String fileName = file.getName();
+
+            if (fileName.endsWith(".zip")) {
+                onInstallZip(file);
+            } else if (fileName.endsWith(".tar.gz")) {
+                onInstallTar(file);
+            } else {
+                throw new AssertionError("Unreachable code");
+            }
+        });
     }
 
     @Override
@@ -94,6 +114,36 @@ public final class JavaManagementPage extends ListPageBase<JavaItem> {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    public void onInstallZip(File zipFile) {
+        throw new UnsupportedOperationException("TODO");
+    }
+
+    public void onInstallTar(File compressedTarFile) {
+        Path tempFile = null;
+        try {
+            tempFile = Files.createTempFile("java-", ".tar");
+
+            try (GZIPInputStream gzipInputStream = new GZIPInputStream(Files.newInputStream(compressedTarFile.toPath()))) {
+                Files.copy(gzipInputStream, tempFile);
+            }
+
+            try (TarFile tarFile = new TarFile(tempFile)) {
+
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e); // TODO
+        } finally {
+            if (tempFile != null) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (IOException ignored) {
+                }
+            }
+        }
+
+        throw new UnsupportedOperationException("TODO");
     }
 
     // FXThread
