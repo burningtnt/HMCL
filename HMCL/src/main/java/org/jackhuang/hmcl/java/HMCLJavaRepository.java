@@ -28,6 +28,7 @@ import org.jackhuang.hmcl.util.gson.JsonUtils;
 import org.jackhuang.hmcl.util.io.FileUtils;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
 import org.jackhuang.hmcl.util.platform.Platform;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,6 +55,7 @@ public final class HMCLJavaRepository implements JavaRepository {
         return root.resolve(platform.toString());
     }
 
+    @Override
     public Path getJavaDir(Platform platform, String name) {
         return getPlatformRoot(platform).resolve(name);
     }
@@ -62,6 +64,7 @@ public final class HMCLJavaRepository implements JavaRepository {
         return getJavaDir(platform, MOJANG_JAVA_PREFIX + gameJavaVersion.getComponent());
     }
 
+    @Override
     public Path getManifestFile(Platform platform, String name) {
         return getPlatformRoot(platform).resolve(name + ".json");
     }
@@ -76,6 +79,26 @@ public final class HMCLJavaRepository implements JavaRepository {
 
     public boolean isInstalled(Platform platform, GameJavaVersion gameJavaVersion) {
         return isInstalled(platform, MOJANG_JAVA_PREFIX + gameJavaVersion.getComponent());
+    }
+
+    public @Nullable Path getJavaExecutable(Platform platform, String name) {
+        Path javaDir = getJavaDir(platform, name);
+        try {
+            return JavaManager.getExecutable(javaDir).toRealPath();
+        } catch (IOException ignored) {
+            if (platform.getOperatingSystem() == OperatingSystem.OSX) {
+                try {
+                    return JavaManager.getMacExecutable(javaDir).toRealPath();
+                } catch (IOException ignored1) {
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public @Nullable Path getJavaExecutable(Platform platform, GameJavaVersion gameJavaVersion) {
+        return getJavaExecutable(platform, MOJANG_JAVA_PREFIX + gameJavaVersion.getComponent());
     }
 
     @Override
@@ -164,6 +187,14 @@ public final class HMCLJavaRepository implements JavaRepository {
             JavaManifest manifest = new JavaManifest(info, update, files);
             FileUtils.writeText(getManifestFile(platform, gameJavaVersion), JsonUtils.GSON.toJson(manifest));
             return JavaRuntime.of(executable, info, true);
+        });
+    }
+
+    @Override
+    public Task<Void> getUninstallJavaTask(Platform platform, String name) {
+        return Task.runAsync(() -> {
+            Files.deleteIfExists(getManifestFile(platform, name));
+            FileUtils.deleteDirectory(getJavaDir(platform, name).toFile());
         });
     }
 
