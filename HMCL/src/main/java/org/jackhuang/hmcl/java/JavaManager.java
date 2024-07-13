@@ -186,8 +186,23 @@ public final class JavaManager {
 
     public static Task<Void> uninstallJava(JavaRuntime java) {
         assert java.isManaged();
-        return REPOSITORY.getUninstallJavaTask(java)
-                .whenComplete(Schedulers.javafx(), (result, exception) -> removeJava(java));
+        Path root = REPOSITORY.getPlatformRoot(java.getPlatform());
+        Path relativized = root.relativize(java.getBinary());
+
+        if (relativized.getNameCount() > 1) {
+            FXUtils.runInFX(() -> {
+                try {
+                    removeJava(java);
+                } catch (InterruptedException e) {
+                    throw new AssertionError("Unreachable code", e);
+                }
+            });
+
+            String name = relativized.getName(0).toString();
+            return REPOSITORY.getUninstallJavaTask(java.getPlatform(), name);
+        } else {
+            return Task.completed(null);
+        }
     }
 
     // FXThread
@@ -203,10 +218,15 @@ public final class JavaManager {
 
     // FXThread
     public static void removeJava(JavaRuntime java) throws InterruptedException {
+        removeJava(java.getBinary());
+    }
+
+    // FXThread
+    public static void removeJava(Path realPath) throws InterruptedException {
         Map<Path, JavaRuntime> oldMap = getAllJavaMap();
-        if (oldMap.containsKey(java.getBinary())) {
+        if (oldMap.containsKey(realPath)) {
             HashMap<Path, JavaRuntime> newMap = new HashMap<>(oldMap);
-            newMap.remove(java.getBinary());
+            newMap.remove(realPath);
             allJava = newMap;
             updateAllJavaProperty(newMap);
         }
