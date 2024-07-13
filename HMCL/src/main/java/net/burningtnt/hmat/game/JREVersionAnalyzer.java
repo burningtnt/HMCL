@@ -93,6 +93,7 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                 }
             }
         }
+
         return ControlFlow.CONTINUE;
     }
 }
