@@ -28,7 +28,7 @@ public final class PRCollection {
         }
 
         if (JOptionPane.showConfirmDialog(
-                null, i18n("prs.warning"), i18n("message.warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE
+                null, i18n("prs.warning", "https://github.com/burningtnt/HMCL/pull/9"), i18n("message.warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE
         ) != JOptionPane.OK_OPTION) {
             System.exit(1);
         }
