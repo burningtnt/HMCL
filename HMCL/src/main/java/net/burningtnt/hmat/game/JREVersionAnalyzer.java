@@ -55,9 +55,13 @@ public class JREVersionAnalyzer implements Analyzer<LogAnalyzable> {
                         return GameJavaVersion.normalize(classVersionMagic - 44);
                     }
             ), pair(
-                    // ASM cannot read the class files. Downgrade Java
+                    // ASM cannot read the class files. Downgrade Java to which suits the game.
                     Pattern.compile("Error loading class: (java|jdk)/[a-zA-Z0-9/]* \\(java.lang.IllegalArgumentException: Class file major version [0-9]* is not supported by active ASM \\(version [0-9]*(\\.[0-9]*)? supports class version [0-9]*\\), reading (java|jdk)/[a-zA-Z0-9/]*\\)"),
                     (input, matcher) -> GameJavaVersion.getMinimumJavaVersion(GameVersionNumber.asGameVersion(input.getRepository().getGameVersion(input.getVersion())))
+            ), pair(
+                    // Forge cannot hack system class loader on Java 11+. Downgrade Java to 8.
+                    Pattern.compile("Exception in thread \"main\" java.lang.ClassCastException: class jdk.internal.loader.ClassLoaders\\$AppClassLoader cannot be cast to class java.net.URLClassLoader (jdk.internal.loader.ClassLoaders\\$AppClassLoader and java.net.URLClassLoader are in module java.base of loader 'bootstrap')"),
+                    (input, matcher) -> GameJavaVersion.JAVA_8
             )
     );
 
