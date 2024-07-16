@@ -1,9 +1,6 @@
 package net.burningtnt.hmclprs;
 
 import javafx.application.Platform;
-import javafx.collections.ObservableList;
-import javafx.scene.Node;
-import javafx.scene.layout.VBox;
 import net.burningtnt.hmclprs.hooks.EntryPoint;
 import net.burningtnt.hmclprs.hooks.Final;
 import net.burningtnt.hmclprs.hooks.HookContainer;
