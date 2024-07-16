@@ -1,6 +1,9 @@
 package net.burningtnt.hmclprs;
 
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
+import javafx.scene.layout.VBox;
 import net.burningtnt.hmclprs.hooks.EntryPoint;
 import net.burningtnt.hmclprs.hooks.Final;
 import net.burningtnt.hmclprs.hooks.HookContainer;
@@ -23,11 +26,7 @@ public final class PRCollection {
 
     @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.INJECT)
     public static void onApplicationLaunch() {
-        if ("ignore".equals(System.getenv("HMCL_PR_WARNING")) || "ignore".equals(System.getProperty("hmcl.pr.warning"))) {
-            return;
-        }
-
-        if (JOptionPane.showConfirmDialog(
+        if (DeveloperFlags.SHOULD_DISPLAY_LAUNCH_WARNING && JOptionPane.showConfirmDialog(
                 null, i18n("prs.warning", "https://github.com/burningtnt/HMCL/pull/9"), i18n("message.warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE
         ) != JOptionPane.OK_OPTION) {
             System.exit(1);
@@ -63,6 +62,11 @@ public final class PRCollection {
     @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.VALUE_MUTATION)
     public static String onInitDisableSelfIntegrityCheckProperty(String value) {
         return value == null ? "true" : value;
+    }
+
+    @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.INJECT)
+    public static boolean onShouldDisplayAnnouncementPane() {
+        return DeveloperFlags.SHOULD_DISPLAY_LAUNCH_WARNING;
     }
 
     @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.INJECT)

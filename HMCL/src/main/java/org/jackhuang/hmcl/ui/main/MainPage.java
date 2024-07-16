@@ -108,7 +108,10 @@ public final class MainPage extends StackPane implements DecoratorPage {
             } else if (Metadata.isDev()) {
                 announcementPane.getChildren().add(new AnnouncementCard(i18n("update.channel.dev.title"), i18n("update.channel.dev.hint")));
             }
-            getChildren().add(announcementPane);
+
+            if (net.burningtnt.hmclprs.PRCollection.onShouldDisplayAnnouncementPane()) {
+                getChildren().add(announcementPane);
+            }
         }
 
         updatePane = new StackPane();
