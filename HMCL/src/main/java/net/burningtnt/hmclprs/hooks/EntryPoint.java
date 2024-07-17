@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 public @interface EntryPoint {
     LifeCycle when();
 
-    Type type();
+    Type type() default Type.INVALID;
 
     enum LifeCycle {
         /**
@@ -26,6 +26,7 @@ public @interface EntryPoint {
     enum Type {
         INJECT,
         VALUE_MUTATION,
-        REDIRECT
+        REDIRECT,
+        INVALID
     }
 }
