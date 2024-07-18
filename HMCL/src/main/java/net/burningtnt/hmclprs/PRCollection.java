@@ -17,6 +17,9 @@ public final class PRCollection {
     }
 
     @Final
+    private static volatile String defaultFullName;
+
+    @Final
     private static volatile String defaultVersion;
 
     @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.INJECT)
@@ -35,28 +38,34 @@ public final class PRCollection {
 
     @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.VALUE_MUTATION)
     public static String onInitApplicationFullName(String fullName) {
+        defaultFullName = fullName;
         return fullName + PRCollectionConstants.PR_COLLECTION_SUFFIX;
     }
 
     @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.VALUE_MUTATION)
-    public static String onInitApplicationVersion(String defaultVersion) {
-        PRCollection.defaultVersion = defaultVersion;
-        return defaultVersion + PRCollectionConstants.PR_COLLECTION_SUFFIX;
+    public static String onInitApplicationVersion(String version) {
+        defaultVersion = version;
+        return version + PRCollectionConstants.PR_COLLECTION_SUFFIX;
     }
 
-    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.VALUE_MUTATION)
-    public static String onInitApplicationPublishURL(String defaultVersion) {
+    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.REDIRECT)
+    public static String onInitApplicationTitle() {
+        return defaultFullName + " v" + defaultVersion + PRCollectionConstants.PR_COLLECTION_SUFFIX;
+    }
+
+    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.REDIRECT)
+    public static String onInitApplicationPublishURL() {
         return PRCollectionConstants.HOME_PAGE;
     }
 
-    @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.VALUE_MUTATION)
-    public static String onGetApplicationRawVersion(String version) {
-        return defaultVersion;
+    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.REDIRECT)
+    public static String onInitApplicationDefaultUpdateLink() {
+        return PRCollectionConstants.UPDATE_LINK;
     }
 
-    @EntryPoint(when = EntryPoint.LifeCycle.BOOTSTRAP, type = EntryPoint.Type.VALUE_MUTATION)
-    public static String onInitApplicationDefaultUpdateLink(String url) {
-        return PRCollectionConstants.UPDATE_LINK;
+    @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.REDIRECT)
+    public static String onGetApplicationRawVersion() {
+        return defaultVersion;
     }
 
     @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.VALUE_MUTATION)
