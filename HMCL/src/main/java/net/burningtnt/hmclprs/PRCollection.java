@@ -6,6 +6,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import net.burningtnt.hmclprs.hooks.EntryPoint;
 import net.burningtnt.hmclprs.hooks.Final;
 import net.burningtnt.hmclprs.hooks.HookContainer;
@@ -80,17 +81,29 @@ public final class PRCollection {
         VBox pane = new VBox(16);
 
         VBox content = new VBox(14);
-        content.setStyle("-fx-border-color: -fx-base-darker-color; -fx-border-radius: 5px; -fx-border-width: 5px;");
+        content.setStyle("-fx-border-color: -fx-base-darker-color; -fx-border-radius: 5px; -fx-border-width: 4px;");
         {
             ImageView view = new ImageView(FXUtils.newBuiltinImage("/assets/img/teacon-banner.png"));
             view.setPreserveRatio(true);
             view.fitWidthProperty().bind(content.widthProperty().subtract(10));
+            Rectangle clip = new Rectangle();
+            FXUtils.onChange(view.layoutBoundsProperty(), layout -> {
+                clip.setX(layout.getMinX());
+                clip.setY(layout.getMinY());
+                clip.setWidth(layout.getWidth());
+                clip.setHeight(layout.getHeight());
+            });
+            clip.setArcWidth(5);
+            clip.setArcHeight(5);
+            view.setClip(clip);
 
             content.setMinWidth(0);
             content.setAlignment(Pos.CENTER);
             content.getChildren().add(view);
 
             content.setOnMouseClicked(e -> FXUtils.openLink("https://www.teacon.cn/"));
+
+            Platform.runLater(content::requestLayout); // Java 8 is Java 8.
         }
         pane.getChildren().add(content);
 
