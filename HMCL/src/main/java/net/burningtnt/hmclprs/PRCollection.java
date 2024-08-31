@@ -2,12 +2,14 @@ package net.burningtnt.hmclprs;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import net.burningtnt.hmclprs.hooks.EntryPoint;
 import net.burningtnt.hmclprs.hooks.Final;
 import net.burningtnt.hmclprs.hooks.HookContainer;
-import org.jackhuang.hmcl.ui.construct.AnnouncementCard;
+import org.jackhuang.hmcl.ui.FXUtils;
 
 import javax.swing.*;
 
@@ -76,10 +78,23 @@ public final class PRCollection {
     @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.REDIRECT)
     public static VBox onBuildAnnouncementPane(ObservableList<Node> nodes) {
         VBox pane = new VBox(16);
-        if (PRCollectionConstants.SHOULD_DISPLAY_LAUNCH_WARNING) {
-            pane.getChildren().add(new AnnouncementCard(PRCollectionConstants.getWarningTitle(), PRCollectionConstants.getWarningBody()));
-            nodes.add(pane);
+
+        VBox content = new VBox(14);
+        content.setStyle("-fx-border-color: -fx-base-darker-color; -fx-border-radius: 5px; -fx-border-width: 5px;");
+        {
+            ImageView view = new ImageView(FXUtils.newBuiltinImage("/assets/img/teacon-banner.png"));
+            view.setPreserveRatio(true);
+            view.fitWidthProperty().bind(content.widthProperty().subtract(10));
+
+            content.setMinWidth(0);
+            content.setAlignment(Pos.CENTER);
+            content.getChildren().add(view);
+
+            content.setOnMouseClicked(e -> FXUtils.openLink("https://www.teacon.cn/"));
         }
+        pane.getChildren().add(content);
+
+        nodes.add(pane);
         return pane;
     }
 
