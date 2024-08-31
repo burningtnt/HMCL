@@ -114,6 +114,8 @@ public final class Launcher extends Application {
                 UpdateChecker.init();
 
                 primaryStage.show();
+
+                net.burningtnt.hmclprs.PRCollection.onApplicationLaunched();
             });
         } catch (Throwable e) {
             CRASH_REPORTER.uncaughtException(Thread.currentThread(), e);

@@ -3,6 +3,7 @@ package net.burningtnt.hmclprs;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
@@ -10,6 +11,7 @@ import javafx.scene.shape.Rectangle;
 import net.burningtnt.hmclprs.hooks.EntryPoint;
 import net.burningtnt.hmclprs.hooks.Final;
 import net.burningtnt.hmclprs.hooks.HookContainer;
+import net.burningtnt.hmclprs.impl.JavaFXSmoothImageRendering;
 import org.jackhuang.hmcl.ui.FXUtils;
 
 import javax.swing.*;
@@ -66,6 +68,11 @@ public final class PRCollection {
         return PRCollectionConstants.UPDATE_LINK;
     }
 
+    @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.INJECT)
+    public static void onApplicationLaunched() {
+        JavaFXSmoothImageRendering.initialize();
+    }
+
     @EntryPoint(when = EntryPoint.LifeCycle.RUNTIME, type = EntryPoint.Type.REDIRECT)
     public static String onGetApplicationRawVersion() {
         return defaultVersion;
@@ -84,8 +91,9 @@ public final class PRCollection {
         content.setStyle("-fx-border-color: -fx-base-darker-color; -fx-border-radius: 5px; -fx-border-width: 4px;");
         {
             ImageView view = new ImageView(FXUtils.newBuiltinImage("/assets/img/teacon-banner.png"));
+            view.setSmooth(true);
             view.setPreserveRatio(true);
-            view.fitWidthProperty().bind(content.widthProperty().subtract(10));
+            view.fitWidthProperty().bind(content.widthProperty().subtract(8));
             Rectangle clip = new Rectangle();
             FXUtils.onChange(view.layoutBoundsProperty(), layout -> {
                 clip.setX(layout.getMinX());
@@ -102,6 +110,7 @@ public final class PRCollection {
             content.getChildren().add(view);
 
             content.setOnMouseClicked(e -> FXUtils.openLink("https://www.teacon.cn/"));
+            content.setCursor(Cursor.HAND);
 
             Platform.runLater(content::requestLayout); // Java 8 is Java 8.
         }
