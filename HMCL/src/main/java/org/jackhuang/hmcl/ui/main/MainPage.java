@@ -143,7 +143,7 @@ public final class MainPage extends StackPane implements DecoratorPage {
         }
 
         StackPane launchPane = new StackPane();
-        launchPane.getStyleClass().add("launch-pane");
+        launchPane.getStyleClass().addAll("launch-pane");
         launchPane.setMaxWidth(230);
         launchPane.setMaxHeight(55);
         launchPane.setOnScroll(event -> {
