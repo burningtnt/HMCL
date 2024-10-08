@@ -19,6 +19,7 @@ package org.jackhuang.hmcl.ui.versions;
 
 import com.jfoenix.controls.*;
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
+import javafx.animation.PauseTransition;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.ListChangeListener;
@@ -33,6 +34,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 import org.jackhuang.hmcl.mod.LocalModFile;
 import org.jackhuang.hmcl.mod.ModLoaderType;
 import org.jackhuang.hmcl.mod.RemoteMod;
@@ -111,9 +113,14 @@ class ModListPageSkin extends SkinBase<ModListPage> {
             searchBar.setAlignment(Pos.CENTER);
             searchBar.setPadding(new Insets(0, 5, 0, 5));
             searchField = new JFXTextField();
-            searchField.setPromptText(i18n("search"));
+            searchField.setPromptText(i18n("search.hint.regex"));
             HBox.setHgrow(searchField, Priority.ALWAYS);
-            searchField.setOnAction(e -> search());
+            PauseTransition pause = new PauseTransition(Duration.millis(100));
+            pause.setOnFinished(e -> search());
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                pause.setRate(1);
+                pause.playFromStart();
+            });
 
             JFXButton closeSearchBar = createToolbarButton2(null, SVG.CLOSE,
                     () -> {
@@ -128,9 +135,9 @@ class ModListPageSkin extends SkinBase<ModListPage> {
 
             // Toolbar Normal
             toolbarNormal.getChildren().setAll(
-                    createToolbarButton2(i18n("button.refresh"), SVG.REFRESH, skinnable::refresh),
-                    createToolbarButton2(i18n("mods.add"), SVG.PLUS, skinnable::add),
-                    createToolbarButton2(i18n("folder.mod"), SVG.FOLDER_OPEN, skinnable::openModFolder),
+                    createToolbarButton2("", SVG.REFRESH, skinnable::refresh),
+                    createToolbarButton2("", SVG.FOLDER_OPEN, skinnable::openModFolder),
+                    createToolbarButton2("", SVG.PLUS, skinnable::add),
                     createToolbarButton2(i18n("mods.check_updates"), SVG.UPDATE, skinnable::checkUpdates),
                     createToolbarButton2(i18n("download"), SVG.DOWNLOAD_OUTLINE, skinnable::download),
                     createToolbarButton2(i18n("search"), SVG.MAGNIFY, () -> changeToolbar(searchBar))
@@ -176,6 +183,14 @@ class ModListPageSkin extends SkinBase<ModListPage> {
             skinnable.getItems().addListener((ListChangeListener<? super ModInfoObject>) c -> {
                 if (isSearching) {
                     search();
+                }
+            });
+
+            listView.setOnContextMenuRequested(event -> {
+                ModInfoObject selectedItem = listView.getSelectionModel().getSelectedItem();
+                if (selectedItem != null && listView.getSelectionModel().getSelectedItems().size() == 1) {
+                    listView.getSelectionModel().clearSelection();
+                    Controllers.dialog(new ModInfoDialog(selectedItem));
                 }
             });
 
@@ -231,7 +246,13 @@ class ModListPageSkin extends SkinBase<ModListPage> {
 
             // Do we need to search in the background thread?
             for (ModInfoObject item : getSkinnable().getItems()) {
-                if (predicate.test(item.getModInfo().getFileName())) {
+                if (predicate.test(item.getModInfo().getFileName() +
+                        item.getModInfo().getName() +
+                        item.getModInfo().getVersion() +
+                        item.getModInfo().getGameVersion() +
+                        item.getModInfo().getId() +
+                        item.getModInfo().getModLoaderType() +
+                        (item.getMod() != null ? item.getMod().getDisplayName() : ""))) {
                     listView.getItems().add(item);
                 }
             }
@@ -250,15 +271,21 @@ class ModListPageSkin extends SkinBase<ModListPage> {
             this.active = localModFile.activeProperty();
 
             StringBuilder title = new StringBuilder(localModFile.getName());
-            if (isNotBlank(localModFile.getVersion()))
-                title.append(" ").append(localModFile.getVersion());
             this.title = title.toString();
 
-            StringBuilder message = new StringBuilder(localModFile.getFileName());
-            if (isNotBlank(localModFile.getGameVersion()))
-                message.append(", ").append(i18n("game.version")).append(": ").append(localModFile.getGameVersion());
-            if (isNotBlank(localModFile.getAuthors()))
-                message.append(", ").append(i18n("archive.author")).append(": ").append(localModFile.getAuthors());
+            StringBuilder message = new StringBuilder(localModFile.getId());
+            if (isNotBlank(localModFile.getVersion())) {
+                if (isNotBlank(localModFile.getId())) {
+                    message.append(", ");
+                }
+                message.append(localModFile.getVersion());
+            }
+            if (isNotBlank(localModFile.getGameVersion())) {
+                if (isNotBlank(localModFile.getVersion())) {
+                    message.append(", ");
+                }
+                message.append(i18n("game.version")).append(": ").append(localModFile.getGameVersion());
+            }
             this.message = message.toString();
 
             this.mod = ModTranslations.MOD.getModById(localModFile.getId());
@@ -355,9 +382,19 @@ class ModListPageSkin extends SkinBase<ModListPage> {
 
             TwoLineListItem title = new TwoLineListItem();
             title.setTitle(modInfo.getModInfo().getName());
-            if (StringUtils.isNotBlank(modInfo.getModInfo().getVersion())) {
-                title.getTags().setAll(modInfo.getModInfo().getVersion());
+            if (modInfo.getMod() != null) {
+                title.getTags().setAll(modInfo.mod.getModIds());
+                title.getTags().add(modInfo.getMod().getDisplayName());
             }
+            if (StringUtils.isNotBlank(modInfo.getModInfo().getGameVersion())) {
+                title.getTags().add(i18n("game.version") + ": " + modInfo.getModInfo().getGameVersion());
+            }
+            if (StringUtils.isNotBlank(modInfo.getModInfo().getVersion())) {
+                title.getTags().add(modInfo.getModInfo().getVersion());
+            }
+//            if (StringUtils.isNotBlank(modInfo.getModInfo().getAuthors())) {
+//                title.getTags().add(i18n("archive.author") + ": " + modInfo.getModInfo().getAuthors());
+//            }
             title.setSubtitle(FileUtils.getName(modInfo.getModInfo().getFile()));
 
             titleContainer.getChildren().setAll(FXUtils.limitingSize(imageView, 40, 40), title);
@@ -453,6 +490,15 @@ class ModListPageSkin extends SkinBase<ModListPage> {
                 getActions().add(mcmodButton);
             }
 
+            if (StringUtils.isNotBlank(modInfo.getModInfo().getName())) {
+                JFXHyperlink copyNameButton = new JFXHyperlink(i18n("mods.name.copy"));
+                copyNameButton.setOnAction(e -> {
+                    FXUtils.copyText(modInfo.getModInfo().getName());
+                });
+
+                getActions().add(copyNameButton);
+            }
+
             JFXButton okButton = new JFXButton();
             okButton.getStyleClass().add("dialog-accept");
             okButton.setText(i18n("button.ok"));
@@ -524,9 +570,14 @@ class ModListPageSkin extends SkinBase<ModListPage> {
                     break;
             }
             if (dataItem.getMod() != null && I18n.isUseChinese()) {
-                content.getTags().add(dataItem.getMod().getDisplayName());
+                if (isNotBlank(dataItem.getSubtitle())) {
+                    content.setSubtitle(dataItem.getSubtitle() + ", " + dataItem.getMod().getDisplayName());
+                } else {
+                    content.setSubtitle(dataItem.getMod().getDisplayName());
+                }
+            } else {
+                content.setSubtitle(dataItem.getSubtitle());
             }
-            content.setSubtitle(dataItem.getSubtitle());
             if (booleanProperty != null) {
                 checkBox.selectedProperty().unbindBidirectional(booleanProperty);
             }

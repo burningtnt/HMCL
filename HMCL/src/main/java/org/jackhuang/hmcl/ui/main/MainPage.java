@@ -143,7 +143,7 @@ public final class MainPage extends StackPane implements DecoratorPage {
         }
 
         StackPane launchPane = new StackPane();
-        launchPane.getStyleClass().add("launch-pane");
+        launchPane.getStyleClass().addAll("launch-pane");
         launchPane.setMaxWidth(230);
         launchPane.setMaxHeight(55);
         launchPane.setOnScroll(event -> {
@@ -230,10 +230,10 @@ public final class MainPage extends StackPane implements DecoratorPage {
         doAnimation(show);
 
         if (show && getLatestVersion() != null && !Objects.equals(config().getPromptedVersion(), getLatestVersion().getVersion())) {
-            Controllers.dialog("", i18n("update.bubble.title", getLatestVersion().getVersion()), MessageDialogPane.MessageType.INFO, () -> {
+            Controllers.confirm("", i18n("update.bubble.title", getLatestVersion().getVersion()), MessageDialogPane.MessageType.INFO, () -> {
                 config().setPromptedVersion(getLatestVersion().getVersion());
                 onUpgrade();
-            });
+            }, null);
         }
     }
 
