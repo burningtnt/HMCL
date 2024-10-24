@@ -46,9 +46,9 @@ public final class UpdateChecker {
                         || Metadata.isNightly()
                         || latest.getChannel() == UpdateChannel.NIGHTLY
                         || latest.getChannel() != UpdateChannel.getChannel()) {
-                    return !latest.getVersion().equals(Metadata.VERSION);
+                    return !latest.getVersion().equals(net.burningtnt.hmclprs.PRCollection.onGetApplicationRawVersion());
                 } else {
-                    return VersionNumber.compare(Metadata.VERSION, latest.getVersion()) < 0;
+                    return VersionNumber.compare(net.burningtnt.hmclprs.PRCollection.onGetApplicationRawVersion(), latest.getVersion()) < 0;
                 }
             },
             latestVersion);

@@ -87,5 +87,7 @@ public final class UpgradeDialog extends JFXDialogLayout {
 
         setActions(openInBrowser, updateButton, cancelButton);
         onEscPressed(this, cancelButton::fire);
+
+        net.burningtnt.hmclprs.PRCollection.onUpdateFrom(updateRunnable);
     }
 }

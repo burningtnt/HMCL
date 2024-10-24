@@ -1,5 +1,8 @@
 name: Java CI
 
+permissions:
+  actions: write
+
 on:
   push:
   pull_request:
@@ -33,3 +36,12 @@ jobs:
       with:
         name: HMCL-${{ env.SHORT_SHA }}
         path: HMCL/build/libs
+    - name: Get Git Branch name
+      run: echo "BRANCH_NAME=$BN_TEMP" >> $GITHUB_ENV
+      env:
+        BN_TEMP: ${{ github.head_ref || github.ref_name }}
+    - name: Trigger HMCL Snapshot Update
+      if: ${{ env.BRANCH_NAME == 'prs' && github.event_name == 'push' }}
+      run: gh workflow --repo burningtnt/HMCL-Snapshot-Update run check.yml
+      env:
+        GH_TOKEN: ${{ secrets.HMCL_PR_COLLECTION_GITHUB_TOKEN }}
