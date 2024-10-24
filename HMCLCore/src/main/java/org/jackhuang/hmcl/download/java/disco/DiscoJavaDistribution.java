@@ -17,10 +17,8 @@
  */
 package org.jackhuang.hmcl.download.java.disco;
 
-import org.jackhuang.hmcl.download.DownloadProvider;
 import org.jackhuang.hmcl.download.java.JavaDistribution;
 import org.jackhuang.hmcl.download.java.JavaPackageType;
-import org.jackhuang.hmcl.task.Task;
 import org.jackhuang.hmcl.util.Pair;
 import org.jackhuang.hmcl.util.platform.Architecture;
 import org.jackhuang.hmcl.util.platform.OperatingSystem;
@@ -35,6 +33,7 @@ import static org.jackhuang.hmcl.util.platform.OperatingSystem.*;
 
 /**
  * @author Glavo
+ * @see <a href="https://github.com/foojayio/discoapi">discoapi</a>
  */
 public enum DiscoJavaDistribution implements JavaDistribution<DiscoJavaRemoteVersion> {
     TEMURIN("Eclipse Temurin", "temurin", "Adoptium",
@@ -42,7 +41,7 @@ public enum DiscoJavaDistribution implements JavaDistribution<DiscoJavaRemoteVer
             pair(WINDOWS, EnumSet.of(X86_64, X86, ARM64)),
             pair(LINUX, EnumSet.of(X86_64, X86, ARM64, ARM32, RISCV64, PPC64, PPC64LE, S390X, SPARCV9)),
             pair(OSX, EnumSet.of(X86_64, ARM64))),
-    LIBERICA("Liberica", "liberica", "BellSoft",
+    LIBERICA("BellSoft Liberica", "liberica", "BellSoft",
             EnumSet.of(JDK, JRE, JDKFX, JREFX),
             pair(WINDOWS, EnumSet.of(X86_64, X86, ARM64)),
             pair(LINUX, EnumSet.of(X86_64, X86, ARM64, ARM32, RISCV64, PPC64LE)),
@@ -56,16 +55,28 @@ public enum DiscoJavaDistribution implements JavaDistribution<DiscoJavaRemoteVer
             return !fileName.endsWith("-lite.tar.gz") && !fileName.endsWith("-lite.zip");
         }
     },
-    ZULU("Zulu", "zulu", "Azul",
+    ZULU("Azul Zulu", "zulu", "Azul",
             EnumSet.of(JDK, JRE, JDKFX, JREFX),
             pair(WINDOWS, EnumSet.of(X86_64, X86, ARM64)),
             pair(LINUX, EnumSet.of(X86_64, X86, ARM64, ARM32, RISCV64, PPC64LE)),
             pair(OSX, EnumSet.of(X86_64, ARM64))),
-    GRAALVM("GraalVM", "graalvm", "Oracle",
+    GRAALVM("Oracle GraalVM", "graalvm", "Oracle",
             EnumSet.of(JDK),
             pair(WINDOWS, EnumSet.of(X86_64)),
             pair(LINUX, EnumSet.of(X86_64, ARM64)),
-            pair(OSX, EnumSet.of(X86_64, ARM64)));
+            pair(OSX, EnumSet.of(X86_64, ARM64))),
+    SEMERU("IBM Semeru (OpenJ9)", "semeru", "IBM",
+            EnumSet.of(JDK, JRE),
+            pair(WINDOWS, EnumSet.of(X86_64)),
+            pair(LINUX, EnumSet.of(X86_64, ARM64, PPC64LE, S390X)),
+            pair(OSX, EnumSet.of(X86_64, ARM64))
+    ),
+    CORRETTO("Amazon Corretto", "corretto", "Amazon",
+            EnumSet.of(JDK),
+            pair(WINDOWS, EnumSet.of(X86_64)),
+            pair(LINUX, EnumSet.of(X86_64, ARM64)),
+            pair(OSX, EnumSet.of(X86_64, ARM64))
+    );
 
     public static DiscoJavaDistribution of(String name) {
         for (DiscoJavaDistribution distribution : values()) {
@@ -116,11 +127,6 @@ public enum DiscoJavaDistribution implements JavaDistribution<DiscoJavaRemoteVer
     public boolean isSupport(Platform platform) {
         EnumSet<Architecture> architectures = supportedPlatforms.get(platform.getOperatingSystem());
         return architectures != null && architectures.contains(platform.getArchitecture());
-    }
-
-    @Override
-    public Task<TreeMap<Integer, DiscoJavaRemoteVersion>> getFetchJavaVersionsTask(DownloadProvider provider, Platform platform, JavaPackageType packageType) {
-        return new DiscoFetchJavaListTask(provider, this, platform, packageType);
     }
 
     public boolean testVersion(DiscoJavaRemoteVersion version) {

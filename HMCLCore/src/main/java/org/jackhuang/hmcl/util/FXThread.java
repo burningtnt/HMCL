@@ -15,32 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package org.jackhuang.hmcl.download.java.mojang;
+package org.jackhuang.hmcl.util;
 
-import org.jackhuang.hmcl.download.java.JavaDistribution;
-import org.jackhuang.hmcl.download.java.JavaPackageType;
-import org.jackhuang.hmcl.download.java.JavaRemoteVersion;
-
-import java.util.Collections;
-import java.util.Set;
+import java.lang.annotation.*;
 
 /**
+ * Mark a method that can only be called on the JavaFX Application Thread,
+ * or mark a field that can only be read/modified on the JavaFX Application Thread.
+ *
  * @author Glavo
  */
-public final class MojangJavaDistribution implements JavaDistribution<JavaRemoteVersion> {
-
-    public static final MojangJavaDistribution DISTRIBUTION = new MojangJavaDistribution();
-
-    private MojangJavaDistribution() {
-    }
-
-    @Override
-    public String getDisplayName() {
-        return "Mojang";
-    }
-
-    @Override
-    public Set<JavaPackageType> getSupportedPackageTypes() {
-        return Collections.singleton(JavaPackageType.JRE);
-    }
+@Documented
+@Target({ElementType.METHOD, ElementType.FIELD})
+@Retention(RetentionPolicy.SOURCE)
+public @interface FXThread {
 }
