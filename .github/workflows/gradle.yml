@@ -1,5 +1,8 @@
 name: Java CI
 
+permissions:
+  actions: write
+
 on:
   push:
   pull_request:
@@ -32,3 +35,12 @@ jobs:
       with:
         name: HMCL-${{ env.SHORT_SHA }}
         path: HMCL/build/libs
+    - name: 'PR Collection: Trigger CI'
+      if: ${{ github.event_name == 'push' }}
+      run: |
+        branch=$(git branch --show-current)
+        if [ "$branch" = "prs" ]; then
+          gh workflow --repo burningtnt/HMCL-Snapshot-Update run check.yml
+        fi
+      env:
+        GH_TOKEN: ${{ secrets.HMCL_PR_COLLECTION_GITHUB_TOKEN }}

@@ -59,6 +59,8 @@ public class RemoteVersion {
     private final IntegrityCheck integrityCheck;
     private final boolean force;
 
+    public final java.util.List<String> prc$fallbackURL;
+
     public RemoteVersion(UpdateChannel channel, String version, String url, Type type, IntegrityCheck integrityCheck, boolean force) {
         this.channel = channel;
         this.version = version;
@@ -66,6 +68,8 @@ public class RemoteVersion {
         this.type = type;
         this.integrityCheck = integrityCheck;
         this.force = force;
+
+        this.prc$fallbackURL = net.burningtnt.hmclprs.hooks.PRCollectionRuntime.prepareFallbackURLs(this);
     }
 
     public UpdateChannel getChannel() {
