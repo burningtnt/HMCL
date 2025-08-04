@@ -73,6 +73,7 @@ public final class LogExporter {
                 zipper.putTextFile(LOG.getLogs(), "hmcl.log");
                 zipper.putTextFile(logs, "minecraft.log");
                 zipper.putTextFile(Logger.filterForbiddenToken(launchScript), OperatingSystem.CURRENT_OS == OperatingSystem.WINDOWS ? "launch.bat" : "launch.sh");
+                net.burningtnt.hmclprs.hooks.PRCollectionRuntime.onCreateGameCrashReport(gameRepository, versionId, zipper);
 
                 for (String id : versions) {
                     Path versionJson = baseDirectory.resolve("versions").resolve(id).resolve(id + ".json");

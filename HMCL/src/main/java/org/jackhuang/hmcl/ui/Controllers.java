@@ -347,6 +347,7 @@ public final class Controllers {
             }
         }
 
+        net.burningtnt.hmclprs.hooks.PRCollectionRuntime.onApplicationLaunch();
         if (globalConfig().getAgreementVersion() < 1) {
             JFXDialogLayout agreementPane = new JFXDialogLayout();
             agreementPane.setHeading(new Label(i18n("launcher.agreement")));

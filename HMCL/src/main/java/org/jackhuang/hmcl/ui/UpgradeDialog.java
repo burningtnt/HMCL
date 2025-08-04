@@ -41,6 +41,8 @@ import static org.jackhuang.hmcl.util.logging.Logger.LOG;
 
 public final class UpgradeDialog extends JFXDialogLayout {
     public UpgradeDialog(RemoteVersion remoteVersion, Runnable updateRunnable) {
+        net.burningtnt.hmclprs.hooks.PRCollectionRuntime.onCreateUpgradeDialog();
+
         maxWidthProperty().bind(Controllers.getScene().widthProperty().multiply(0.7));
         maxHeightProperty().bind(Controllers.getScene().heightProperty().multiply(0.7));
 

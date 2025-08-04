@@ -34,21 +34,21 @@ public final class Metadata {
     private Metadata() {
     }
 
-    public static final String NAME = "HMCL";
-    public static final String FULL_NAME = "Hello Minecraft! Launcher";
-    public static final String VERSION = System.getProperty("hmcl.version.override", JarUtils.getAttribute("hmcl.version", "@develop@"));
+    public static final String NAME = net.burningtnt.hmclprs.hooks.PRCollectionBootstrap.onInitApplicationName("HMCL");
+    public static final String FULL_NAME = net.burningtnt.hmclprs.hooks.PRCollectionBootstrap.onInitApplicationFullName("Hello Minecraft! Launcher");
+    public static final String VERSION = net.burningtnt.hmclprs.hooks.PRCollectionBootstrap.onInitApplicationVersion(System.getProperty("hmcl.version.override", JarUtils.getAttribute("hmcl.version", "@develop@")));
 
     public static final String TITLE = NAME + " " + VERSION;
-    public static final String FULL_TITLE = FULL_NAME + " v" + VERSION;
+    public static final String FULL_TITLE = net.burningtnt.hmclprs.hooks.PRCollectionBootstrap.onInitApplicationTitle();
 
     public static final int MINIMUM_REQUIRED_JAVA_VERSION = 11;
     public static final int MINIMUM_SUPPORTED_JAVA_VERSION = 17;
     public static final int RECOMMENDED_JAVA_VERSION = 21;
 
-    public static final String PUBLISH_URL = "https://hmcl.huangyuhui.net";
+    public static final String PUBLISH_URL = net.burningtnt.hmclprs.hooks.PRCollectionBootstrap.onInitApplicationPublishURL();;
     public static final String ABOUT_URL = PUBLISH_URL + "/about";
     public static final String DOWNLOAD_URL = PUBLISH_URL + "/download";
-    public static final String HMCL_UPDATE_URL = System.getProperty("hmcl.update_source.override", PUBLISH_URL + "/api/update_link");
+    public static final String HMCL_UPDATE_URL = System.getProperty("hmcl.update_source.override", net.burningtnt.hmclprs.hooks.PRCollectionBootstrap.onInitApplicationDefaultUpdateLink());
 
     public static final String DOCS_URL = "https://docs.hmcl.net";
     public static final String CONTACT_URL = DOCS_URL + "/help.html";

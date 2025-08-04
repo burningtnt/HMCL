@@ -102,7 +102,8 @@ public final class UpdateHandler {
             return;
         }
 
-        Controllers.dialog(new UpgradeDialog(version, () -> {
+        net.burningtnt.hmclprs.hooks.PRCollectionBootstrap.importRef(UpgradeDialog.class);
+        {
             Path downloaded;
             try {
                 downloaded = Files.createTempFile("hmcl-update-", ".jar");
@@ -141,7 +142,7 @@ public final class UpdateHandler {
                     }
                 }
             });
-        }));
+        }
     }
 
     private static void applyUpdate(Path target) throws IOException {
