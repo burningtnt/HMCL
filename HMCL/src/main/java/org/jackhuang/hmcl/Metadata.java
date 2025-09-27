@@ -41,7 +41,7 @@ public final class Metadata {
     public static final String TITLE = NAME + " " + VERSION;
     public static final String FULL_TITLE = net.burningtnt.hmclprs.hooks.PRCollectionBootstrap.onInitApplicationTitle();
 
-    public static final int MINIMUM_REQUIRED_JAVA_VERSION = 11;
+    public static final int MINIMUM_REQUIRED_JAVA_VERSION = 17;
     public static final int MINIMUM_SUPPORTED_JAVA_VERSION = 17;
     public static final int RECOMMENDED_JAVA_VERSION = 21;
 
