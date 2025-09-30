@@ -37,6 +37,8 @@ public interface ITerracottaProvider {
         void bindProgress(ObservableValue<? extends Number> value);
 
         boolean requestInstallFence();
+        
+        boolean hasInstallFence();
     }
 
     abstract class ProviderException extends IOException {
@@ -71,5 +73,5 @@ public interface ITerracottaProvider {
 
     Task<?> install(Context context, @Nullable TarFileTree tree) throws IOException;
 
-    List<String> launch(Path path);
+    List<String> ofCommandLine(Path path);
 }
