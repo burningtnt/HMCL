@@ -62,13 +62,20 @@ import org.jackhuang.hmcl.ui.construct.ComponentList;
 import org.jackhuang.hmcl.ui.construct.ComponentSublist;
 import org.jackhuang.hmcl.ui.construct.MessageDialogPane;
 import org.jackhuang.hmcl.ui.construct.RipplerContainer;
+import org.jackhuang.hmcl.ui.construct.SpinnerPane;
 import org.jackhuang.hmcl.ui.construct.TwoLineListItem;
 import org.jackhuang.hmcl.ui.versions.Versions;
 import org.jackhuang.hmcl.util.i18n.I18n;
 import org.jackhuang.hmcl.util.io.FileUtils;
+import org.jackhuang.hmcl.util.io.Zipper;
+import org.jackhuang.hmcl.util.logging.Logger;
 
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -88,6 +95,8 @@ public class TerracottaControllerPage extends StackPane {
 
     private final WeakListenerHolder holder = new WeakListenerHolder();
 
+    /* FIXME: It's sucked to have such a long logic, containing UI for all states defined in TerracottaState, with unclear control flows.
+         Consider moving UI into multiple files for each state respectively. */
     public TerracottaControllerPage() {
         TransitionPane transition = new TransitionPane();
 
@@ -159,7 +168,7 @@ public class TerracottaControllerPage extends StackPane {
                 statusProperty.set(i18n("terracotta.status.uninitialized." + fork));
                 progressProperty.set(0);
 
-                TextFlow body = FXUtils.segmentToTextFlow(i18n("terracotta.first_time_warning"), Controllers::onHyperlinkAction);
+                TextFlow body = FXUtils.segmentToTextFlow(i18n("terracotta.confirm.desc"), Controllers::onHyperlinkAction);
                 body.setLineSpacing(4);
 
                 LineButton download = LineButton.of();
@@ -407,7 +416,43 @@ public class TerracottaControllerPage extends StackPane {
                     }
                 });
 
-                nodesProperty.setAll(back);
+                SpinnerPane exportLog = new SpinnerPane();
+                LineButton exportLogInner = LineButton.of();
+                exportLogInner.setLeftIcon(SVG.OUTPUT);
+                exportLogInner.setTitle(i18n("terracotta.export_log"));
+                exportLogInner.setSubtitle(i18n("terracotta.export_log.desc"));
+                exportLog.setContent(exportLogInner);
+                exportLog.getProperties().put("ComponentList.noPadding", true);
+                // FIXME: SpinnerPane loses its content width in loading state.
+                exportLog.minHeightProperty().bind(back.heightProperty());
+
+                FXUtils.onClicked(exportLogInner, () -> {
+                    exportLog.setLoading(true);
+
+                    TerracottaManager.exportLogs().thenAcceptAsync(Schedulers.io(), data -> {
+                        if (data == null || data.isEmpty()) {
+                            return;
+                        }
+
+                        Path path = Path.of("terracotta-log-" + LocalDateTime.now().format(
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
+                        ) + ".zip").toAbsolutePath();
+                        try (Zipper zipper = new Zipper(path)) {
+                            zipper.putTextFile(data, StandardCharsets.UTF_8, "terracotta.log");
+                            try (OutputStream os = zipper.putStream("hmcl-latest.log")) {
+                                Logger.LOG.exportLogs(os);
+                            }
+                        }
+                        FXUtils.showFileInExplorer(path);
+                    }).thenRunAsync(
+                            () -> Thread.sleep(3000)
+                    ).whenComplete(
+                            Schedulers.javafx(),
+                            e -> exportLog.setLoading(false)
+                    ).start();
+                });
+
+                nodesProperty.setAll(back, exportLog);
             } else if (state instanceof TerracottaState.Fatal fatal) {
                 String message = i18n("terracotta.status.fatal." + fatal.getType().name().toLowerCase(Locale.ROOT));
 
